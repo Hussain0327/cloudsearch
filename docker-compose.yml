@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: cloudsearch
+      POSTGRES_USER: cloudsearch
+      POSTGRES_PASSWORD: cloudsearch
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudsearch"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  embed-service:
+    build:
+      context: .
+      dockerfile: api/embed_service/Dockerfile
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./src/ingestion:/app/src/ingestion:ro
+    environment:
+      PYTHONPATH: /app/src
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: cloudsearch
+      DB_PASSWORD: cloudsearch
+      DB_NAME: cloudsearch
+      EMBED_SERVICE_URL: http://embed-service:8081
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-claude-sonnet-4-20250514}
+      SERVER_PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      embed-service:
+        condition: service_healthy
+
+volumes:
+  pgdata:

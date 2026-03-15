@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Lambda function handler in Python - AWS Lambda</title>
+</head>
+<body>
+<nav class="awsdocs-nav">Nav</nav>
+<div class="awsdocs-container">
+    <main role="main">
+        <h1>Lambda function handler in Python</h1>
+        <p>The Lambda function handler is the method in your function code that processes events.
+        When your function is invoked, Lambda runs the handler method. Your function runs until the
+        handler returns a response, exits, or times out.</p>
+
+        <h2>Handler syntax</h2>
+        <p>The general syntax for a Python handler is:</p>
+        <pre><code class="language-python">def handler_name(event, context):
+    ...
+    return some_value</code></pre>
+        <p>The handler takes two objects: the event object and the context object.</p>
+
+        <h2>Event object</h2>
+        <p>Lambda passes the event data to your handler as the first argument. The event is a
+        JSON-formatted document that contains data for a Lambda function to process.</p>
+        <p>The event format depends on the service that invokes the function. For example, an
+        API Gateway event looks like this:</p>
+        <pre><code class="language-json">{
+    "resource": "/my/path",
+    "path": "/my/path",
+    "httpMethod": "GET",
+    "headers": {
+        "Accept": "text/html"
+    },
+    "queryStringParameters": {
+        "foo": "bar"
+    }
+}</code></pre>
+
+        <h2>Context object</h2>
+        <p>Lambda passes the context object as the second argument. The context object provides
+        information about the invocation, function, and runtime environment.</p>
+
+        <h3>Context methods</h3>
+        <table>
+            <tr>
+                <th>Method</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>get_remaining_time_in_millis()</td>
+                <td>Returns the number of milliseconds left before the execution times out.</td>
+            </tr>
+        </table>
+
+        <h3>Context properties</h3>
+        <table>
+            <tr>
+                <th>Property</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>function_name</td>
+                <td>The name of the Lambda function.</td>
+            </tr>
+            <tr>
+                <td>memory_limit_in_mb</td>
+                <td>The amount of memory that is allocated for the function.</td>
+            </tr>
+            <tr>
+                <td>invoked_function_arn</td>
+                <td>The Amazon Resource Name (ARN) used to invoke the function.</td>
+            </tr>
+        </table>
+
+        <h2>Returning a value</h2>
+        <p>Optionally, a handler can return a value. What happens to the returned value depends
+        on the invocation type and the service that invoked the function.</p>
+
+        <div class="awsdocs-note">
+            <div class="awsdocs-note-title">Note</div>
+            <p>In Python 3.9 and later runtimes, Lambda includes the full traceback in the error response.
+            In earlier runtimes, the traceback may be truncated.</p>
+        </div>
+    </main>
+</div>
+<footer>Footer</footer>
+</body>
+</html>

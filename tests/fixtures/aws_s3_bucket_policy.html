@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Bucket policy examples - Amazon Simple Storage Service</title>
+</head>
+<body>
+<nav class="awsdocs-nav">Navigation here</nav>
+<div id="main-col-body">
+    <h1>Bucket policy examples</h1>
+    <p>This section presents examples of typical use cases for bucket policies. The policies use
+    <code>example-bucket</code> as the resource value. To test these policies, replace the bucket name
+    with your actual bucket name.</p>
+
+    <h2>Granting permissions to multiple accounts</h2>
+    <p>The following example policy grants the <code>s3:PutObject</code> and <code>s3:PutObjectAcl</code>
+    permissions to multiple AWS accounts.</p>
+
+    <pre><code class="language-json">{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AddCannedAcl",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam::111122223333:root",
+                    "arn:aws:iam::444455556666:root"
+                ]
+            },
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": "arn:aws:s3:::example-bucket/*",
+            "Condition": {
+                "StringEquals": {
+                    "s3:x-amz-acl": [
+                        "public-read"
+                    ]
+                }
+            }
+        }
+    ]
+}</code></pre>
+
+    <h2>Granting read-only permission to an anonymous user</h2>
+    <p>The following example policy grants the <code>s3:GetObject</code> permission to any
+    public anonymous user. This is equivalent to a public read-only policy.</p>
+
+    <div class="awsdocs-note">
+        <div class="awsdocs-note-title">Warning</div>
+        <p>Use caution when granting anonymous access to your Amazon S3 bucket. When you grant
+        anonymous access, anyone in the world can access your bucket. We highly recommend that
+        you never grant any kind of anonymous write access to your S3 bucket.</p>
+    </div>
+
+    <pre><code>{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicRead",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::example-bucket/*"
+        }
+    ]
+}</code></pre>
+
+    <h2>Service quotas for S3</h2>
+    <table>
+        <tr>
+            <th>Resource</th>
+            <th>Default quota</th>
+            <th>Adjustable</th>
+        </tr>
+        <tr>
+            <td>Buckets per account</td>
+            <td>100</td>
+            <td>Yes</td>
+        </tr>
+        <tr>
+            <td>Object size (max)</td>
+            <td>5 TB</td>
+            <td>No</td>
+        </tr>
+        <tr>
+            <td>Parts per upload</td>
+            <td>10,000</td>
+            <td>No</td>
+        </tr>
+    </table>
+
+    <h2>Using the AWS CLI</h2>
+    <p>You can also use the AWS CLI to manage bucket policies. The following command applies a policy:</p>
+    <pre><code>$ aws s3api put-bucket-policy --bucket example-bucket --policy file://policy.json</code></pre>
+
+    <h3>Verifying the policy</h3>
+    <p>After applying the policy, verify it with the following command:</p>
+    <pre><code>$ aws s3api get-bucket-policy --bucket example-bucket</code></pre>
+
+    <h2>Related resources</h2>
+    <ul>
+        <li>Access policy language overview</li>
+        <li>Bucket policy examples in the <em>Amazon S3 Developer Guide</em></li>
+        <li>IAM JSON policy reference</li>
+    </ul>
+</div>
+<footer>Footer content</footer>
+</body>
+</html>

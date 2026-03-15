@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+
+# Environment variables
+.env
+
+# Crawl state
+crawl_state.db
+
+# IDE
+.vscode/
+.idea/
+
+# pytest
+.pytest_cache/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Go
+api/bin/
+api/server
