@@ -24,10 +24,10 @@ Crawls AWS docs, chunks them with semantic structure preservation, embeds with B
 
 **Three layers, each in the right language:**
 
-| Layer | Language | Why |
-|-------|----------|-----|
-| Ingestion pipeline | Python | sentence-transformers, tiktoken, BeautifulSoup — the ML ecosystem lives here |
-| API server | Go | Single binary, goroutine fan-out for concurrent search, SSE streaming, sub-ms serving |
+| Layer               | Language   | Why                                                                                      |
+| ------------------- | ---------- | ---------------------------------------------------------------------------------------- |
+| Ingestion pipeline  | Python     | sentence-transformers, tiktoken, BeautifulSoup — the ML ecosystem lives here             |
+| API server          | Go         | Single binary, goroutine fan-out for concurrent search, SSE streaming, sub-ms serving    |
 | Storage + retrieval | PostgreSQL | pgvector for dense similarity + tsvector for sparse keyword match in one DB, no Pinecone |
 
 ## What it does
@@ -52,6 +52,7 @@ ollama pull llama3.2
 make db-up
 
 # 3. Run schema migrations
+
 make setup    # creates Python venv
 make migrate
 
@@ -91,6 +92,7 @@ POST /api/v1/search        Hybrid search + RAG answer generation
 ```
 
 **Non-streaming response:**
+
 ```json
 {
   "answer": "To set up an S3 bucket policy...",
@@ -114,6 +116,7 @@ POST /api/v1/search        Hybrid search + RAG answer generation
 ```
 
 **Streaming response (SSE):**
+
 ```
 event: chunk
 data: To set up
@@ -136,13 +139,13 @@ Pure vector search misses exact matches on CLI flags and service names. Pure key
 
 **Case study from our test suite** (`reranker_test.go:TestFuseRRF_CaseStudy_HybridBeatsEitherAlone`):
 
-Query: *"verbose logging in aws s3 cp"*
+Query: _"verbose logging in aws s3 cp"_
 
-| Method | Top result | Correct? |
-|--------|-----------|----------|
-| Vector only | Server access logging docs (semantically similar but wrong) | No |
-| Keyword only | S3 cp --debug flag docs (keyword match but ranked low) | Partial |
-| **Hybrid (RRF)** | **S3 cp --debug flag docs** (appears in both lists, RRF boosts it to #1) | **Yes** |
+| Method           | Top result                                                               | Correct? |
+| ---------------- | ------------------------------------------------------------------------ | -------- |
+| Vector only      | Server access logging docs (semantically similar but wrong)              | No       |
+| Keyword only     | S3 cp --debug flag docs (keyword match but ranked low)                   | Partial  |
+| **Hybrid (RRF)** | **S3 cp --debug flag docs** (appears in both lists, RRF boosts it to #1) | **Yes**  |
 
 ## LLM provider abstraction
 
@@ -160,6 +163,7 @@ LLM_PROVIDER=openai LLM_API_KEY=sk-... LLM_MODEL=gpt-4o
 ```
 
 All three implement the same `llm.Provider` interface with compile-time checks:
+
 ```go
 type Provider interface {
     StreamCompletion(ctx context.Context, system, user string) <-chan StreamEvent
@@ -278,22 +282,22 @@ make docker-down  # Tear down
 
 All via environment variables:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SERVER_PORT` | `8080` | API server port |
-| `DB_HOST` | `localhost` | Postgres host |
-| `DB_PORT` | `5432` | Postgres port |
-| `DB_USER` | `cloudsearch` | Postgres user |
-| `DB_PASSWORD` | `cloudsearch` | Postgres password |
-| `DB_NAME` | `cloudsearch` | Postgres database |
-| `EMBED_SERVICE_URL` | `http://localhost:8081` | BGE embedding sidecar URL |
-| `LLM_PROVIDER` | `ollama` | LLM backend: `ollama`, `anthropic`, `openai` |
-| `LLM_MODEL` | `llama3.2` | Model name |
-| `LLM_API_KEY` | | Required for anthropic/openai only |
-| `CACHE_MAX_ENTRIES` | `1000` | LRU cache size |
-| `CACHE_TTL` | `15m` | Cache entry TTL |
-| `RATE_LIMIT_RPS` | `10` | Requests per second per IP |
-| `LOG_LEVEL` | `info` | Log level (debug, info, warn, error) |
+| Variable            | Default                 | Description                                  |
+| ------------------- | ----------------------- | -------------------------------------------- |
+| `SERVER_PORT`       | `8080`                  | API server port                              |
+| `DB_HOST`           | `localhost`             | Postgres host                                |
+| `DB_PORT`           | `5432`                  | Postgres port                                |
+| `DB_USER`           | `cloudsearch`           | Postgres user                                |
+| `DB_PASSWORD`       | `cloudsearch`           | Postgres password                            |
+| `DB_NAME`           | `cloudsearch`           | Postgres database                            |
+| `EMBED_SERVICE_URL` | `http://localhost:8081` | BGE embedding sidecar URL                    |
+| `LLM_PROVIDER`      | `ollama`                | LLM backend: `ollama`, `anthropic`, `openai` |
+| `LLM_MODEL`         | `llama3.2`              | Model name                                   |
+| `LLM_API_KEY`       |                         | Required for anthropic/openai only           |
+| `CACHE_MAX_ENTRIES` | `1000`                  | LRU cache size                               |
+| `CACHE_TTL`         | `15m`                   | Cache entry TTL                              |
+| `RATE_LIMIT_RPS`    | `10`                    | Requests per second per IP                   |
+| `LOG_LEVEL`         | `info`                  | Log level (debug, info, warn, error)         |
 
 ## Scaling considerations (not implemented, documented for context)
 
