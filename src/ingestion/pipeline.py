@@ -58,16 +58,28 @@ class IngestPipeline:
         )
         self._executor = ThreadPoolExecutor(max_workers=2)
 
-    async def run(self, services: list[str] | None = None) -> dict:
+    async def run(
+        self,
+        services: list[str] | None = None,
+        extra_urls: list[str] | None = None,
+        max_pages: int | None = None,
+    ) -> dict:
         """Run the full pipeline for given services (or all)."""
         start = time.monotonic()
         seed_urls = self._resolve_seeds(services)
+        if extra_urls:
+            # Preserve order and dedupe while merging
+            seen = set(seed_urls)
+            for u in extra_urls:
+                if u not in seen:
+                    seed_urls.append(u)
+                    seen.add(u)
 
-        log.info("pipeline_start", services=services or "all", seeds=len(seed_urls))
+        log.info("pipeline_start", services=services or "all", seeds=len(seed_urls), max_pages=max_pages)
 
         await self._indexer.connect()
         try:
-            stats = await self._process(seed_urls)
+            stats = await self._process(seed_urls, max_pages=max_pages)
         finally:
             await self._indexer.close()
 
@@ -76,7 +88,7 @@ class IngestPipeline:
         log.info("pipeline_complete", **stats)
         return stats
 
-    async def _process(self, seed_urls: list[str]) -> dict:
+    async def _process(self, seed_urls: list[str], max_pages: int | None = None) -> dict:
         crawler = AWSCrawler(
             concurrency=self.settings.crawler.concurrency,
             rate_limit_rps=self.settings.crawler.rate_limit_rps,
@@ -91,35 +103,43 @@ class IngestPipeline:
         pending_chunks: list[Chunk] = []
         pending_meta: list[tuple[str, str, str, str, datetime]] = []  # url, service, title, hash, crawled_at
 
-        async for crawl_result in crawler.crawl(seed_urls):
-            try:
-                chunks, title = self._parse_and_chunk(crawl_result)
-                if not chunks:
-                    pages_skipped += 1
-                    continue
+        crawl_iter = crawler.crawl(seed_urls)
+        try:
+            async for crawl_result in crawl_iter:
+                try:
+                    chunks, title = self._parse_and_chunk(crawl_result)
+                    if not chunks:
+                        pages_skipped += 1
+                        continue
 
-                pages_crawled += 1
-                total_chunks += len(chunks)
+                    pages_crawled += 1
+                    total_chunks += len(chunks)
 
-                pending_chunks.extend(chunks)
-                for _ in chunks:
-                    pending_meta.append((
-                        crawl_result.url,
-                        crawl_result.service_name,
-                        title,
-                        crawl_result.content_hash,
-                        crawl_result.crawled_at,
-                    ))
+                    pending_chunks.extend(chunks)
+                    for _ in chunks:
+                        pending_meta.append((
+                            crawl_result.url,
+                            crawl_result.service_name,
+                            title,
+                            crawl_result.content_hash,
+                            crawl_result.crawled_at,
+                        ))
 
-                # Embed in batches
-                if len(pending_chunks) >= self.settings.embed_batch_size:
-                    await self._embed_and_index_batch(pending_chunks, pending_meta)
-                    pending_chunks = []
-                    pending_meta = []
+                    # Embed in batches
+                    if len(pending_chunks) >= self.settings.embed_batch_size:
+                        await self._embed_and_index_batch(pending_chunks, pending_meta)
+                        pending_chunks = []
+                        pending_meta = []
 
-            except Exception:
-                pages_errored += 1
-                log.exception("page_processing_error", url=crawl_result.url)
+                except Exception:
+                    pages_errored += 1
+                    log.exception("page_processing_error", url=crawl_result.url)
+
+                if max_pages is not None and (pages_crawled + pages_skipped) >= max_pages:
+                    log.info("max_pages_reached", limit=max_pages)
+                    break
+        finally:
+            await crawl_iter.aclose()
 
         # Flush remaining
         if pending_chunks:

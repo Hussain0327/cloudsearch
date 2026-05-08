@@ -36,8 +36,32 @@ def cli():
     multiple=True,
     help="AWS services to ingest (e.g. s3 lambda). Omit for all.",
 )
+@click.option(
+    "--url",
+    "urls",
+    multiple=True,
+    help="Extra seed URL(s) to crawl in addition to service-resolved seeds. Repeatable.",
+)
+@click.option(
+    "--urls-file",
+    type=click.Path(exists=True, dir_okay=False),
+    default=None,
+    help="File of newline-separated seed URLs (added to --url and service seeds).",
+)
+@click.option(
+    "--max-pages",
+    type=int,
+    default=None,
+    help="Stop after this many crawled pages have been yielded (across all services).",
+)
 @click.option("--log-level", default="INFO", help="Log level (DEBUG, INFO, WARNING, ERROR)")
-def ingest(services: tuple[str, ...], log_level: str):
+def ingest(
+    services: tuple[str, ...],
+    urls: tuple[str, ...],
+    urls_file: str | None,
+    max_pages: int | None,
+    log_level: str,
+):
     """Run the full ingestion pipeline: crawl → parse → chunk → embed → index."""
     _setup_logging(log_level)
     log = structlog.get_logger()
@@ -49,9 +73,20 @@ def ingest(services: tuple[str, ...], log_level: str):
     pipeline = IngestPipeline(settings)
 
     service_list = list(services) if services else None
-    log.info("starting_ingestion", services=service_list or "all")
+    extra_urls: list[str] = list(urls)
+    if urls_file:
+        with open(urls_file) as f:
+            extra_urls.extend(line.strip() for line in f if line.strip() and not line.startswith("#"))
+    log.info(
+        "starting_ingestion",
+        services=service_list or "all",
+        extra_urls=len(extra_urls),
+        max_pages=max_pages,
+    )
 
-    stats = asyncio.run(pipeline.run(services=service_list))
+    stats = asyncio.run(
+        pipeline.run(services=service_list, extra_urls=extra_urls or None, max_pages=max_pages)
+    )
 
     click.echo("\n--- Ingestion Summary ---")
     for key, value in stats.items():
