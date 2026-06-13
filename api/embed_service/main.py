@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 # Add project root to path so we can import ingestion.embedder
@@ -14,9 +16,24 @@ from pydantic import BaseModel
 
 from ingestion.embedder.bge import BGEEmbedder
 
-app = FastAPI(title="CloudSearch Embedding Service", version="1.0.0")
+# Device is configurable via EMBED_DEVICE (e.g. "cpu", "cuda", "mps"). Default
+# auto-select. On a single-GPU Mac where Ollama also uses Metal, pin this to
+# "cpu" to avoid GPU contention that makes embeds slow enough to time out.
+embedder = BGEEmbedder(device=os.getenv("EMBED_DEVICE") or None)
 
-embedder = BGEEmbedder()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Eagerly load the BGE model at startup so the first real request doesn't
+    # pay the cold-start cost (which can exceed the Go embed client's 10s
+    # timeout, causing it to fall back to keyword-only search). With the
+    # lifespan API, uvicorn only begins serving after this returns — so once
+    # /health responds, the model is resident and the service is truly ready.
+    embedder.embed_query("warmup")
+    yield
+
+
+app = FastAPI(title="CloudSearch Embedding Service", version="1.0.0", lifespan=lifespan)
 
 
 class EmbedRequest(BaseModel):

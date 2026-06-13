@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import aiosqlite
 
@@ -47,7 +47,7 @@ class CrawlState:
                 content_hash = excluded.content_hash,
                 last_crawled_at = excluded.last_crawled_at
             """,
-            (url, content_hash, datetime.utcnow().isoformat()),
+            (url, content_hash, datetime.now(timezone.utc).isoformat()),
         )
         await self._db.commit()
 

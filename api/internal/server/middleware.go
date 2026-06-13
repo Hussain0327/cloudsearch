@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -38,21 +39,45 @@ func RequestLogger(next http.Handler) http.Handler {
 	})
 }
 
-// CORS adds permissive CORS headers for development.
-func CORS(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		w.Header().Set("Access-Control-Max-Age", "86400")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
+// CORS returns a middleware that emits CORS headers scoped to the configured
+// allowed origins. If a configured origin is the literal "*", it falls back to
+// a wildcard (dev opt-in) WITHOUT Allow-Credentials, since the browser rejects
+// wildcard + credentials. Otherwise, a matching Origin is echoed back exactly
+// with Allow-Credentials so credentialed requests work.
+func CORS(allowedOrigins []string) func(http.Handler) http.Handler {
+	wildcard := false
+	allowed := make(map[string]struct{}, len(allowedOrigins))
+	for _, o := range allowedOrigins {
+		o = strings.TrimSpace(o)
+		if o == "*" {
+			wildcard = true
+		} else if o != "" {
+			allowed[o] = struct{}{}
 		}
+	}
 
-		next.ServeHTTP(w, r)
-	})
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if _, ok := allowed[origin]; ok && origin != "" {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Add("Vary", "Origin")
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+			} else if wildcard {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+			}
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Max-Age", "86400")
+
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 // TimeoutExempt sets a context value to exempt a route from the global timeout.

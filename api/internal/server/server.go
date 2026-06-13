@@ -21,14 +21,14 @@ type Server struct {
 }
 
 // New creates a configured HTTP server.
-func New(port int, health *handler.HealthHandler, search *handler.SearchHandler, stats *handler.StatsHandler, rl *ratelimit.Limiter) *Server {
+func New(port int, corsOrigins []string, health *handler.HealthHandler, search *handler.SearchHandler, stats *handler.StatsHandler, rl *ratelimit.Limiter) *Server {
 	r := chi.NewRouter()
 
 	// Global middleware
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	r.Use(CORS)
+	r.Use(CORS(corsOrigins))
 	r.Use(RequestLogger)
 	// Note: chi's middleware.Timeout is NOT applied globally because it
 	// conflicts with SSE streaming (it installs http.TimeoutHandler which

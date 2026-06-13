@@ -10,8 +10,9 @@ from datetime import datetime, timezone
 import pytest
 
 from ingestion.chunker.hierarchical import HierarchicalChunker
-from ingestion.models import CrawlResult
+from ingestion.models import Chunk, ChunkType, CrawlResult
 from ingestion.parser.aws import AWSParser
+from ingestion.pipeline import IngestPipeline
 
 
 class TestParseAndChunkIntegration:
@@ -63,3 +64,95 @@ class TestParseAndChunkIntegration:
         # Lambda fixture has Python code and JSON
         code_or_config = [c for c in chunks if c.chunk_type.value in ("code", "config")]
         assert len(code_or_config) >= 2
+
+
+class _FakeState:
+    """Records crawl-state updates without touching SQLite."""
+
+    def __init__(self):
+        self.updated: list[tuple[str, str]] = []
+
+    async def update(self, url: str, content_hash: str) -> None:
+        self.updated.append((url, content_hash))
+
+
+class TestCrawlStateDecoupling:
+    """Crawl state must be persisted only AFTER a successful Postgres index."""
+
+    def _make_pipeline(self) -> IngestPipeline:
+        # Constructed lazily; embedder/indexer are stubbed per-test so no real
+        # model or DB connection is required.
+        pipeline = IngestPipeline()
+        # embed_chunks is called via run_in_executor (sync callable); keep it sync.
+        pipeline._embedder.embed_chunks = lambda chunks, batch_size: None
+        return pipeline
+
+    def _chunk(self) -> Chunk:
+        return Chunk(text="[Sec] body", chunk_type=ChunkType.PROSE, section_path="Sec", token_count=2)
+
+    async def test_state_updated_after_successful_index(self):
+        pipeline = self._make_pipeline()
+        indexed: list[str] = []
+
+        async def _get_hash(url):
+            return None  # nothing indexed yet
+
+        async def _index_document(**kwargs):
+            indexed.append(kwargs["url"])
+            return 1
+
+        pipeline._indexer.get_document_hash = _get_hash
+        pipeline._indexer.index_document = _index_document
+
+        state = _FakeState()
+        url = "https://docs.aws.amazon.com/lambda/latest/dg/welcome.html"
+        chunks = [self._chunk()]
+        meta = [(url, "lambda", "Welcome", "hash1", datetime.now(timezone.utc))]
+
+        await pipeline._embed_and_index_batch(chunks, meta, state=state)
+
+        assert indexed == [url]
+        assert state.updated == [(url, "hash1")]
+
+    async def test_state_not_updated_when_index_raises(self):
+        pipeline = self._make_pipeline()
+
+        async def _get_hash(url):
+            return None
+
+        async def _index_document(**kwargs):
+            raise RuntimeError("postgres down")
+
+        pipeline._indexer.get_document_hash = _get_hash
+        pipeline._indexer.index_document = _index_document
+
+        state = _FakeState()
+        url = "https://docs.aws.amazon.com/lambda/latest/dg/welcome.html"
+        meta = [(url, "lambda", "Welcome", "hash1", datetime.now(timezone.utc))]
+
+        with pytest.raises(RuntimeError):
+            await pipeline._embed_and_index_batch([self._chunk()], meta, state=state)
+
+        # State must NOT record the URL since Postgres never received the document.
+        assert state.updated == []
+
+    async def test_state_self_heals_on_unchanged_branch(self):
+        pipeline = self._make_pipeline()
+
+        async def _get_hash(url):
+            return "hash1"  # Postgres already has this exact document
+
+        async def _index_document(**kwargs):  # pragma: no cover - must not be called
+            raise AssertionError("index_document should not run for unchanged docs")
+
+        pipeline._indexer.get_document_hash = _get_hash
+        pipeline._indexer.index_document = _index_document
+
+        state = _FakeState()
+        url = "https://docs.aws.amazon.com/lambda/latest/dg/welcome.html"
+        meta = [(url, "lambda", "Welcome", "hash1", datetime.now(timezone.utc))]
+
+        await pipeline._embed_and_index_batch([self._chunk()], meta, state=state)
+
+        # Self-heal: state is recorded because Postgres already has the row.
+        assert state.updated == [(url, "hash1")]

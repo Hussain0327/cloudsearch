@@ -12,6 +12,7 @@ import structlog
 from ingestion.chunker.hierarchical import HierarchicalChunker
 from ingestion.config import PipelineSettings
 from ingestion.crawler.aws import AWSCrawler
+from ingestion.crawler.state import CrawlState
 from ingestion.embedder.bge import BGEEmbedder
 from ingestion.indexer.postgres import PostgresIndexer
 from ingestion.models import Chunk, CrawlResult
@@ -127,7 +128,9 @@ class IngestPipeline:
 
                     # Embed in batches
                     if len(pending_chunks) >= self.settings.embed_batch_size:
-                        await self._embed_and_index_batch(pending_chunks, pending_meta)
+                        await self._embed_and_index_batch(
+                            pending_chunks, pending_meta, state=crawler.state
+                        )
                         pending_chunks = []
                         pending_meta = []
 
@@ -138,12 +141,17 @@ class IngestPipeline:
                 if max_pages is not None and (pages_crawled + pages_skipped) >= max_pages:
                     log.info("max_pages_reached", limit=max_pages)
                     break
+
+            # Flush remaining while the crawler (and its crawl-state store) is
+            # still open, so per-url crawl state is persisted after indexing.
+            if pending_chunks:
+                await self._embed_and_index_batch(
+                    pending_chunks, pending_meta, state=crawler.state
+                )
+                pending_chunks = []
+                pending_meta = []
         finally:
             await crawl_iter.aclose()
-
-        # Flush remaining
-        if pending_chunks:
-            await self._embed_and_index_batch(pending_chunks, pending_meta)
 
         return {
             "pages_crawled": pages_crawled,
@@ -168,8 +176,15 @@ class IngestPipeline:
         self,
         chunks: list[Chunk],
         meta: list[tuple[str, str, str, str, datetime]],
+        state: CrawlState | None = None,
     ) -> None:
-        """Embed chunks via thread pool, then index into Postgres."""
+        """Embed chunks via thread pool, then index into Postgres.
+
+        Crawl state (``state``) is persisted per-url only AFTER the document is
+        successfully indexed into Postgres (or confirmed already present), so the
+        SQLite crawl_state never records a URL as crawled that Postgres never
+        received. This keeps the two stores consistent and self-heals divergence.
+        """
         loop = asyncio.get_event_loop()
 
         # Embed in thread pool (sentence-transformers is synchronous)
@@ -191,7 +206,11 @@ class IngestPipeline:
         for url, (service, title, content_hash, crawled_at, doc_chunk_list) in doc_chunks.items():
             existing_hash = await self._indexer.get_document_hash(url)
             if existing_hash == content_hash:
+                # Postgres already has this exact document, so it is safe (and
+                # self-healing) to record the crawl state now.
                 log.debug("document_unchanged_skipping", url=url)
+                if state is not None:
+                    await state.update(url, content_hash)
                 continue
             await self._indexer.index_document(
                 url=url,
@@ -201,6 +220,9 @@ class IngestPipeline:
                 crawled_at=crawled_at,
                 chunks=doc_chunk_list,
             )
+            # Persist crawl state only after a successful Postgres index.
+            if state is not None:
+                await state.update(url, content_hash)
 
     def _resolve_seeds(self, services: list[str] | None) -> list[str]:
         if not services:

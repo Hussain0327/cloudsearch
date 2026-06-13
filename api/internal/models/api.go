@@ -3,9 +3,12 @@ package models
 import "time"
 
 // SearchRequest is the input DTO for POST /api/v1/search.
+// TopK is a pointer so an omitted/unset value (nil -> default 10) is
+// distinguishable from an explicit out-of-range value (e.g. 0) that must be
+// rejected per the documented 1-20 contract.
 type SearchRequest struct {
 	Query    string   `json:"query"`
-	TopK     int      `json:"top_k,omitempty"`
+	TopK     *int     `json:"top_k,omitempty"`
 	Services []string `json:"services,omitempty"`
 	Stream   bool     `json:"stream,omitempty"`
 }

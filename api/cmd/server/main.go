@@ -72,7 +72,7 @@ func main() {
 	statsHandler := handler.NewStatsHandler(pool)
 
 	// Server
-	srv := server.New(cfg.ServerPort, healthHandler, searchHandler, statsHandler, rl)
+	srv := server.New(cfg.ServerPort, cfg.CORSAllowedOrigins, healthHandler, searchHandler, statsHandler, rl)
 
 	// Graceful shutdown
 	sigCh := make(chan os.Signal, 1)
@@ -102,7 +102,9 @@ func main() {
 func newLLMProvider(cfg *config.Config) llm.Provider {
 	switch strings.ToLower(cfg.LLMProvider) {
 	case "openai":
-		if cfg.LLMModel == "claude-sonnet-4-20250514" {
+		// The configured default LLMModel is "llama3.2" (Ollama default); fall
+		// back to a real OpenAI model when no OpenAI-specific model was set.
+		if cfg.LLMModel == "" || cfg.LLMModel == "llama3.2" {
 			cfg.LLMModel = "gpt-4o" // sensible default for OpenAI
 		}
 		return llm.NewOpenAIProvider(cfg.LLMAPIKey, cfg.LLMModel, cfg.LLMBaseURL)

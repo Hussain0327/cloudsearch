@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -60,14 +61,16 @@ func (c *Cache) SetAnswer(key string, entry *AnswerEntry) {
 	c.answers.Add(key, entry)
 }
 
-// Key generates a cache key from the query and service filter.
-// Uses SHA-256 of lowercased query + sorted services.
-func Key(query string, services []string) string {
+// Key generates a cache key from the query, top-K, and service filter.
+// Uses SHA-256 of lowercased query + top-K + sorted services. top-K is
+// included because it affects the result set (chunk count), so requests
+// differing only in top_k must not collide.
+func Key(query string, topK int, services []string) string {
 	sorted := make([]string, len(services))
 	copy(sorted, services)
 	sort.Strings(sorted)
 
-	raw := strings.ToLower(query) + "|" + strings.Join(sorted, ",")
+	raw := strings.ToLower(query) + "|" + strconv.Itoa(topK) + "|" + strings.Join(sorted, ",")
 	hash := sha256.Sum256([]byte(raw))
 	return fmt.Sprintf("%x", hash)
 }

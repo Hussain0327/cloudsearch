@@ -3,9 +3,9 @@ package retrieval
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	"github.com/rs/zerolog"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/hussain/cloudsearch/api/internal/embedding"
 	"github.com/hussain/cloudsearch/api/internal/models"
@@ -53,33 +53,38 @@ func (h *HybridSearcher) Search(ctx context.Context, query string, topK int, ser
 		return keywordResults, nil
 	}
 
-	// Step 2: Fan out vector + keyword searches
-	var vectorResults, keywordResults []models.ScoredChunk
+	// Step 2: Fan out vector + keyword searches concurrently, isolating each
+	// arm's failure. Both run against the original ctx (not a cancel-on-error
+	// derived context) so one arm failing does not cancel the other. This
+	// preserves graceful degradation: keyword-only when vector fails (e.g. a
+	// pgvector dimension/index issue) and vector-only when keyword fails.
+	var (
+		vectorResults, keywordResults []models.ScoredChunk
+		vectorErr, keywordErr         error
+		wg                            sync.WaitGroup
+	)
 
-	g, gctx := errgroup.WithContext(ctx)
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		vectorResults, vectorErr = h.vectorSearch.Search(ctx, queryVec, retrieveK, services)
+	}()
+	go func() {
+		defer wg.Done()
+		keywordResults, keywordErr = h.keywordSearch.Search(ctx, query, retrieveK, services)
+	}()
+	wg.Wait()
 
-	g.Go(func() error {
-		var err error
-		vectorResults, err = h.vectorSearch.Search(gctx, queryVec, retrieveK, services)
-		if err != nil {
-			return fmt.Errorf("vector search: %w", err)
-		}
-		log.Debug().Int("count", len(vectorResults)).Msg("vector search complete")
-		return nil
-	})
-
-	g.Go(func() error {
-		var err error
-		keywordResults, err = h.keywordSearch.Search(gctx, query, retrieveK, services)
-		if err != nil {
-			return fmt.Errorf("keyword search: %w", err)
-		}
-		log.Debug().Int("count", len(keywordResults)).Msg("keyword search complete")
-		return nil
-	})
-
-	if err := g.Wait(); err != nil {
-		return nil, err
+	if vectorErr != nil {
+		log.Warn().Err(vectorErr).Msg("vector search failed, degrading to keyword-only")
+		vectorResults = nil
+	}
+	if keywordErr != nil {
+		log.Warn().Err(keywordErr).Msg("keyword search failed, degrading to vector-only")
+		keywordResults = nil
+	}
+	if vectorErr != nil && keywordErr != nil {
+		return nil, fmt.Errorf("both vector and keyword search failed: vector=%v keyword=%v", vectorErr, keywordErr)
 	}
 
 	// Step 3: Fuse with RRF and return top-K

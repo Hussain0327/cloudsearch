@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -48,11 +49,18 @@ func (h *SearchHandler) Search(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.TopK <= 0 || req.TopK > 20 {
-		req.TopK = 10
+	// top_k is documented as 1-20 with default 10. Reject explicit out-of-range
+	// values per contract; default only the omitted/unset (nil) case.
+	topK := 10
+	if req.TopK != nil {
+		if *req.TopK < 1 || *req.TopK > 20 {
+			http.Error(w, `{"error":"top_k must be between 1 and 20"}`, http.StatusBadRequest)
+			return
+		}
+		topK = *req.TopK
 	}
 
-	cacheKey := cache.Key(req.Query, req.Services)
+	cacheKey := cache.Key(req.Query, topK, req.Services)
 
 	// Level 2: Check answer cache
 	if cached, ok := h.cache.GetAnswer(cacheKey); ok {
@@ -80,16 +88,22 @@ func (h *SearchHandler) Search(w http.ResponseWriter, r *http.Request) {
 		chunks = cached.Chunks
 	} else {
 		var err error
-		chunks, err = h.searcher.Search(ctx, req.Query, req.TopK, req.Services)
+		chunks, err = h.searcher.Search(ctx, req.Query, topK, req.Services)
 		if err != nil {
 			log.Error().Err(err).Str("query", req.Query).Msg("hybrid search failed")
 			http.Error(w, `{"error":"search failed"}`, http.StatusInternalServerError)
 			return
 		}
-		h.cache.SetRetrieval(cacheKey, &cache.RetrievalEntry{
-			Chunks:   chunks,
-			CachedAt: time.Now(),
-		})
+		// Only cache non-empty results. An empty result usually means a
+		// transient/degraded search (e.g. the embed service timed out and we
+		// fell back to keyword-only); caching it would poison subsequent
+		// identical queries for the full TTL. Empty results are cheap to recompute.
+		if len(chunks) > 0 {
+			h.cache.SetRetrieval(cacheKey, &cache.RetrievalEntry{
+				Chunks:   chunks,
+				CachedAt: time.Now(),
+			})
+		}
 	}
 
 	// No results — tell the user clearly
@@ -140,7 +154,12 @@ func (h *SearchHandler) streamResponse(w http.ResponseWriter, r *http.Request, s
 		return
 	}
 
-	eventCh := h.llmProvider.StreamCompletion(r.Context(), system, user)
+	// Derive a cancelable context so we can abort the upstream LLM request and
+	// drain the producer goroutine if the client disconnects mid-stream,
+	// preventing goroutine/connection leaks on WriteChunk failure.
+	streamCtx, cancel := context.WithCancel(r.Context())
+	defer cancel()
+	eventCh := h.llmProvider.StreamCompletion(streamCtx, system, user)
 
 	var fullAnswer strings.Builder
 	for event := range eventCh {
@@ -149,6 +168,10 @@ func (h *SearchHandler) streamResponse(w http.ResponseWriter, r *http.Request, s
 			fullAnswer.WriteString(event.Text)
 			if err := sse.WriteChunk(event.Text); err != nil {
 				log.Error().Err(err).Msg("writing SSE chunk")
+				cancel() // abort the in-flight upstream request
+				for range eventCh {
+					// drain so the producer reaches "defer close(ch)"
+				}
 				return
 			}
 		case "error":

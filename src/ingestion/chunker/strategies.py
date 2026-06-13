@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from ingestion.chunker.token_counter import count_tokens
-from ingestion.models import Chunk, ChunkType, ContentNode
+from ingestion.models import Chunk, ChunkType
 
 # Patterns for config detection (IAM policies, CloudFormation, Terraform, etc.)
 _CONFIG_PATTERNS = [
@@ -74,6 +74,18 @@ class ProseChunkStrategy:
                         current_tokens = 0
                     current_parts.append(sentence)
                     current_tokens += s_tokens
+                # Flush trailing sentences with the sentence joiner so they never
+                # reach the paragraph-joiner final flush.
+                if current_parts:
+                    chunk_text = context_header + " ".join(current_parts)
+                    chunks.append(Chunk(
+                        text=chunk_text,
+                        chunk_type=ChunkType.PROSE,
+                        section_path=section_path,
+                        token_count=count_tokens(chunk_text),
+                    ))
+                    current_parts = []
+                    current_tokens = 0
                 continue
 
             if current_tokens + para_tokens > available and current_parts:

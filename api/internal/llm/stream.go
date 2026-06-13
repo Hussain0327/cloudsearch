@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // SSEWriter wraps an http.ResponseWriter for Server-Sent Events.
@@ -68,8 +69,15 @@ func (s *SSEWriter) writeEvent(event, data string) error {
 		return err
 	}
 	if data != "" {
-		if _, err := fmt.Fprintf(s.w, "data: %s\n", data); err != nil {
-			return err
+		// Emit one "data: " line per newline-delimited segment. A literal '\n'
+		// inside an SSE data value terminates the field, so multi-line payloads
+		// (Markdown lists, code blocks, cached answers) must be split. The
+		// EventSource client rejoins consecutive data: lines with '\n',
+		// reconstructing the original text; single-line payloads are unchanged.
+		for _, ln := range strings.Split(data, "\n") {
+			if _, err := fmt.Fprintf(s.w, "data: %s\n", ln); err != nil {
+				return err
+			}
 		}
 	}
 	if _, err := fmt.Fprint(s.w, "\n"); err != nil {

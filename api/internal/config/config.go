@@ -29,6 +29,10 @@ type Config struct {
 	LLMModel    string `env:"LLM_MODEL" envDefault:"llama3.2"`
 	LLMBaseURL  string `env:"LLM_BASE_URL" envDefault:""`
 
+	// CORS — comma-separated allowed origins. The literal "*" is an explicit
+	// dev opt-in to wildcard (no credentials).
+	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:"," envDefault:"http://localhost:3000"`
+
 	// Cache
 	CacheMaxEntries int           `env:"CACHE_MAX_ENTRIES" envDefault:"1000"`
 	CacheTTL        time.Duration `env:"CACHE_TTL" envDefault:"15m"`

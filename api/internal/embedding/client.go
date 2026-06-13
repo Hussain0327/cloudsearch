@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/pgvector/pgvector-go"
@@ -28,11 +30,21 @@ type embedResponse struct {
 }
 
 // NewClient creates an embedding client targeting the sidecar at baseURL.
+// The HTTP timeout defaults to 30s and can be overridden with the
+// EMBED_TIMEOUT_SECONDS env var (the BGE model can be slow on CPU or under
+// GPU contention; 10s was too aggressive and caused spurious keyword-only
+// fallbacks).
 func NewClient(baseURL string) *Client {
+	timeout := 30 * time.Second
+	if v := os.Getenv("EMBED_TIMEOUT_SECONDS"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			timeout = time.Duration(n) * time.Second
+		}
+	}
 	return &Client{
 		baseURL: baseURL,
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: timeout,
 		},
 	}
 }
