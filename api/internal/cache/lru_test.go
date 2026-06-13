@@ -8,8 +8,8 @@ import (
 )
 
 func TestKey_SameQueryAndServices_SameKey(t *testing.T) {
-	k1 := Key("how to deploy", []string{"s3", "ec2"})
-	k2 := Key("how to deploy", []string{"s3", "ec2"})
+	k1 := Key("how to deploy", 10, []string{"s3", "ec2"})
+	k2 := Key("how to deploy", 10, []string{"s3", "ec2"})
 
 	if k1 != k2 {
 		t.Errorf("same query+services should produce same key: %s != %s", k1, k2)
@@ -17,8 +17,8 @@ func TestKey_SameQueryAndServices_SameKey(t *testing.T) {
 }
 
 func TestKey_DifferentQuery_DifferentKey(t *testing.T) {
-	k1 := Key("how to deploy", []string{"s3"})
-	k2 := Key("how to delete", []string{"s3"})
+	k1 := Key("how to deploy", 10, []string{"s3"})
+	k2 := Key("how to delete", 10, []string{"s3"})
 
 	if k1 == k2 {
 		t.Error("different queries should produce different keys")
@@ -26,17 +26,26 @@ func TestKey_DifferentQuery_DifferentKey(t *testing.T) {
 }
 
 func TestKey_DifferentServices_DifferentKey(t *testing.T) {
-	k1 := Key("how to deploy", []string{"s3"})
-	k2 := Key("how to deploy", []string{"ec2"})
+	k1 := Key("how to deploy", 10, []string{"s3"})
+	k2 := Key("how to deploy", 10, []string{"ec2"})
 
 	if k1 == k2 {
 		t.Error("different services should produce different keys")
 	}
 }
 
+func TestKey_DifferentTopK_DifferentKey(t *testing.T) {
+	k1 := Key("how to deploy", 3, []string{"s3"})
+	k2 := Key("how to deploy", 20, []string{"s3"})
+
+	if k1 == k2 {
+		t.Error("different top_k should produce different keys")
+	}
+}
+
 func TestKey_CaseInsensitive(t *testing.T) {
-	k1 := Key("How To Deploy", []string{"s3"})
-	k2 := Key("how to deploy", []string{"s3"})
+	k1 := Key("How To Deploy", 10, []string{"s3"})
+	k2 := Key("how to deploy", 10, []string{"s3"})
 
 	if k1 != k2 {
 		t.Errorf("key should be case-insensitive: %s != %s", k1, k2)
@@ -44,8 +53,8 @@ func TestKey_CaseInsensitive(t *testing.T) {
 }
 
 func TestKey_SortsServices(t *testing.T) {
-	k1 := Key("query", []string{"ec2", "s3", "lambda"})
-	k2 := Key("query", []string{"lambda", "s3", "ec2"})
+	k1 := Key("query", 10, []string{"ec2", "s3", "lambda"})
+	k2 := Key("query", 10, []string{"lambda", "s3", "ec2"})
 
 	if k1 != k2 {
 		t.Errorf("key should sort services: %s != %s", k1, k2)
@@ -57,7 +66,7 @@ func TestKey_DoesNotMutateInput(t *testing.T) {
 	original := make([]string, len(services))
 	copy(original, services)
 
-	Key("query", services)
+	Key("query", 10, services)
 
 	for i, s := range services {
 		if s != original[i] {
@@ -82,7 +91,7 @@ func TestGetAnswer_Miss(t *testing.T) {
 func TestSetAndGetAnswer(t *testing.T) {
 	c := New(100, 5*time.Minute)
 
-	key := Key("test query", []string{"s3"})
+	key := Key("test query", 10, []string{"s3"})
 	expected := &AnswerEntry{
 		Answer: "The answer is 42.",
 		Citations: []models.Citation{
@@ -129,7 +138,7 @@ func TestGetRetrieval_Miss(t *testing.T) {
 func TestSetAndGetRetrieval(t *testing.T) {
 	c := New(100, 5*time.Minute)
 
-	key := Key("search query", []string{"ec2"})
+	key := Key("search query", 10, []string{"ec2"})
 	expected := &RetrievalEntry{
 		Chunks: []models.ScoredChunk{
 			{

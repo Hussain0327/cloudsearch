@@ -1,0 +1,334 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   CloudSearch — "The Console"
+   Industrial / utilitarian observability-console design system.
+   Dark-first; light is an inversion mapped via the same tokens.
+   ========================================================================== */
+
+:root {
+  /* --- Surfaces -------------------------------------------------------- */
+  --app-bg: #0b0e14;
+  --panel: #10141c;
+  --raised: #141925;
+  --hairline: #1e2530;
+  --border-strong: #2a3242;
+
+  /* --- Text ----------------------------------------------------------- */
+  --text-primary: #e6eaf2;
+  --text-secondary: #9aa4b6;
+  --text-muted: #5c6678;
+  --text-inverse: #0b0e14;
+
+  /* --- Brand / accent (signal-amber) ---------------------------------- */
+  --accent: #f5a623;
+  --accent-hover: #ffb838;
+  --accent-press: #d98e12;
+  --accent-tint: rgba(245, 166, 35, 0.1);
+
+  /* --- Secondary accent (links / citations, cyan) --------------------- */
+  --cyan: #3dd6d0;
+  --cyan-tint: rgba(61, 214, 208, 0.12);
+
+  /* --- Semantic ------------------------------------------------------- */
+  --success: #46c46a;
+  --warning: #e8b339;
+  --error: #f2545b;
+  --error-tint: rgba(242, 84, 91, 0.12);
+  --info: #5b9bd5;
+
+  /* --- Score heat scale (low -> high relevance) ----------------------- */
+  --heat-0: #5c6678;
+  --heat-1: #5b9bd5;
+  --heat-2: #3dd6d0;
+  --heat-3: #46c46a;
+  --heat-4: #f5a623;
+
+  /* --- Focus ring ----------------------------------------------------- */
+  --focus-ring: rgba(61, 214, 208, 0.6);
+
+  /* --- Dotted blueprint grid (subtle) --------------------------------- */
+  --grid-dot: rgba(154, 164, 182, 0.03);
+
+  /* --- Radii ---------------------------------------------------------- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-pill: 999px;
+
+  color-scheme: dark;
+}
+
+/* Light theme: inversion mapped through identical token names. */
+[data-theme="light"] {
+  --app-bg: #f7f8fa;
+  --panel: #ffffff;
+  --raised: #ffffff;
+  --hairline: #e4e7ec;
+  --border-strong: #cdd3dd;
+
+  --text-primary: #14181f;
+  --text-secondary: #4a5364;
+  --text-muted: #7b8494;
+  --text-inverse: #f7f8fa;
+
+  --accent: #d98e12;
+  --accent-hover: #c47e0b;
+  --accent-press: #b06f08;
+  --accent-tint: rgba(217, 142, 18, 0.1);
+
+  --cyan: #1ba8a2;
+  --cyan-tint: rgba(27, 168, 162, 0.12);
+
+  --grid-dot: rgba(20, 24, 31, 0.04);
+  --focus-ring: rgba(27, 168, 162, 0.6);
+
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   Tailwind v4 theme bridge — expose tokens as utilities (bg-app, text-muted,
+   border-hairline, font-mono, etc.) and register fonts loaded via next/font.
+   ========================================================================== */
+@theme inline {
+  --color-app: var(--app-bg);
+  --color-panel: var(--panel);
+  --color-raised: var(--raised);
+  --color-hairline: var(--hairline);
+  --color-border-strong: var(--border-strong);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-press: var(--accent-press);
+  --color-accent-tint: var(--accent-tint);
+
+  --color-cyan: var(--cyan);
+  --color-cyan-tint: var(--cyan-tint);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-error-tint: var(--error-tint);
+  --color-info: var(--info);
+
+  --color-heat-0: var(--heat-0);
+  --color-heat-1: var(--heat-1);
+  --color-heat-2: var(--heat-2);
+  --color-heat-3: var(--heat-3);
+  --color-heat-4: var(--heat-4);
+
+  /* Fonts (CSS variables provided by next/font in app/layout.tsx). */
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-hanken), ui-sans-serif,
+    system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Menlo,
+    monospace;
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+}
+
+/* ==========================================================================
+   Base element styles
+   ========================================================================== */
+* {
+  border-color: var(--hairline);
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100%;
+  background-color: var(--app-bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem; /* 15px body */
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Dotted blueprint grid (radial-dot 22px @ ~3% opacity). */
+  background-image: radial-gradient(
+    var(--grid-dot) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  background-position: -11px -11px;
+}
+
+/* Tabular, slashed-zero numerals everywhere mono is used. */
+.font-mono,
+code,
+kbd,
+pre {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
+/* ==========================================================================
+   Typography scale (rem) — see DESIGN SPEC.
+   ========================================================================== */
+.text-display {
+  font-family: var(--font-display);
+  font-size: 2rem; /* 32px */
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.text-h1 {
+  font-family: var(--font-display);
+  font-size: 1.5rem; /* 24px */
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.text-h2 {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 600;
+  line-height: 1.3;
+}
+.text-body {
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.6;
+}
+.text-small {
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.5;
+}
+.text-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem; /* 12px */
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "ss01" 1;
+}
+.text-micro {
+  font-size: 0.6875rem; /* 11px */
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+/* Answer prose: grotesk 16/1.7, max 72ch. */
+.prose-answer {
+  font-size: 1rem; /* 16px */
+  line-height: 1.7;
+  max-width: 72ch;
+}
+
+/* ==========================================================================
+   Focus ring — 2px cyan @ 60% + 1px inner app-bg.
+   ========================================================================== */
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--app-bg);
+  border-radius: var(--radius-sm);
+}
+
+/* ==========================================================================
+   Micro-interactions
+   ========================================================================== */
+@keyframes caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.caret-blink {
+  animation: caret-blink 1.06s steps(1, end) infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent-tint) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes flash-cite {
+  0% {
+    border-color: var(--accent);
+    background-color: var(--accent-tint);
+  }
+  100% {
+    border-color: var(--hairline);
+    background-color: transparent;
+  }
+}
+.flash-cite {
+  animation: flash-cite 600ms ease-out;
+}
+
+/* Faint top vignette glow in signal-amber behind the query bar. */
+.vignette-amber::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 200px;
+  pointer-events: none;
+  background: radial-gradient(
+    60% 120px at 50% 0%,
+    var(--accent-tint),
+    transparent 70%
+  );
+  z-index: 0;
+}
+
+/* Hairline divider utility. */
+.hairline {
+  border-color: var(--hairline);
+}
+
+/* Respect reduced-motion: kill all decorative animation/scroll smoothing. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Thin, on-brand scrollbars for the dense panels. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border-radius: var(--radius-pill);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}

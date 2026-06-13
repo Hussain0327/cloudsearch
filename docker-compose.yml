@@ -15,6 +15,16 @@ services:
       timeout: 5s
       retries: 5
 
+  migrate:
+    build:
+      context: .
+      dockerfile: api/migrate/Dockerfile
+    environment:
+      DATABASE_URL: postgresql://cloudsearch:cloudsearch@postgres:5432/cloudsearch
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   embed-service:
     build:
       context: .
@@ -23,8 +33,10 @@ services:
       - "8081:8081"
     volumes:
       - ./src/ingestion:/app/src/ingestion:ro
+      - hf-cache:/opt/hf-cache
     environment:
       PYTHONPATH: /app/src
+      HF_HOME: /opt/hf-cache
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
       interval: 10s
@@ -47,6 +59,7 @@ services:
       DB_PASSWORD: cloudsearch
       DB_NAME: cloudsearch
       EMBED_SERVICE_URL: http://embed-service:8081
+      LLM_PROVIDER: ${LLM_PROVIDER:-anthropic}
       LLM_API_KEY: ${LLM_API_KEY}
       LLM_MODEL: ${LLM_MODEL:-claude-sonnet-4-20250514}
       SERVER_PORT: 8080
@@ -55,6 +68,9 @@ services:
         condition: service_healthy
       embed-service:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:
+  hf-cache:

@@ -51,6 +51,11 @@ class AWSCrawler(BaseCrawler):
         self._state = CrawlState(state_db_path)
         self._timeout = aiohttp.ClientTimeout(total=request_timeout)
 
+    @property
+    def state(self) -> CrawlState:
+        """The crawl-state store. Persisted by the pipeline after a successful index."""
+        return self._state
+
     async def crawl(self, seed_urls: list[str]) -> AsyncIterator[CrawlResult]:
         """BFS crawl from seed URLs, yielding pages as they're fetched."""
         await self._state.open()
@@ -59,11 +64,22 @@ class AWSCrawler(BaseCrawler):
             seen: set[str] = set()
             results: asyncio.Queue[CrawlResult | None] = asyncio.Queue()
 
-            # Determine allowed path prefixes from seeds
+            # Determine allowed path prefixes from seeds. Derive the scope from the
+            # seed's DIRECTORY (drop a trailing filename) so a deep-page seed like
+            # .../dg/welcome.html still expands to sibling pages under .../dg/.
+            # Normalize the prefix the same way as queued URLs and discovered links
+            # so trailing-slash handling matches and the seed itself stays in scope.
             prefixes = set()
             for url in seed_urls:
                 parsed = urlparse(url)
-                prefixes.add(f"{parsed.scheme}://{parsed.netloc}{parsed.path}")
+                path = parsed.path
+                last_segment = path.rsplit("/", 1)[1] if "/" in path else path
+                if "." in last_segment:
+                    # Looks like a file: widen scope to its directory.
+                    path = path.rsplit("/", 1)[0] + "/"
+                    log.info("seed_scope_widened_to_directory", seed=url, scope_path=path)
+                prefix_url = f"{parsed.scheme}://{parsed.netloc}{path}"
+                prefixes.add(self._normalize_url(prefix_url))
 
             for url in seed_urls:
                 normalized = self._normalize_url(url)
@@ -73,9 +89,13 @@ class AWSCrawler(BaseCrawler):
 
             workers_done = asyncio.Event()
             active_workers = 0
+            # Number of workers currently mid-fetch. The frontier is only truly
+            # exhausted when the queue is empty AND no worker is fetching (whose
+            # in-flight request may still enqueue new links).
+            active_fetches = 0
 
             async def worker():
-                nonlocal active_workers
+                nonlocal active_workers, active_fetches
                 active_workers += 1
                 try:
                     async with aiohttp.ClientSession(timeout=self._timeout) as session:
@@ -83,20 +103,23 @@ class AWSCrawler(BaseCrawler):
                             try:
                                 url = queue.get_nowait()
                             except asyncio.QueueEmpty:
-                                # Check if other workers might add more
-                                if queue.empty():
+                                # No work AND nobody fetching => frontier exhausted.
+                                if active_fetches == 0:
                                     break
-                                await asyncio.sleep(0.1)
+                                await asyncio.sleep(0.05)
                                 continue
 
+                            active_fetches += 1
                             try:
                                 result, links = await self._fetch_page(session, url, prefixes)
                                 if result:
-                                    # Check if content changed
+                                    # Forward whenever content changed; the crawl
+                                    # state is persisted later, after a successful
+                                    # Postgres index, to keep the two stores
+                                    # consistent (see pipeline._embed_and_index_batch).
                                     if not await self._state.is_unchanged(
                                         url, result.content_hash
                                     ):
-                                        await self._state.update(url, result.content_hash)
                                         await results.put(result)
                                     else:
                                         log.debug("page_unchanged", url=url)
@@ -110,8 +133,9 @@ class AWSCrawler(BaseCrawler):
 
                             except Exception:
                                 log.exception("crawl_error", url=url)
-
-                            queue.task_done()
+                            finally:
+                                active_fetches -= 1
+                                queue.task_done()
                 finally:
                     active_workers -= 1
                     if active_workers == 0:

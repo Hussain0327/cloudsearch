@@ -7,8 +7,8 @@ from ingestion.chunker.strategies import (
     ProseChunkStrategy,
     TableChunkStrategy,
 )
-from ingestion.chunker.token_counter import count_tokens, truncate_to_tokens
-from ingestion.models import Chunk, ContentNode, ContentNodeType
+from ingestion.chunker.token_counter import count_tokens, tail_tokens, truncate_to_tokens
+from ingestion.models import Chunk, ChunkType, ContentNode, ContentNodeType
 
 
 class HierarchicalChunker:
@@ -121,39 +121,23 @@ class HierarchicalChunker:
             prev = chunks[i - 1]
             curr = chunks[i]
 
-            # Only overlap prose chunks in the same section
+            # Only overlap prose chunks within the same section
             if (
                 prev.section_path != curr.section_path
-                or prev.chunk_type != Chunk.__dataclass_fields__["chunk_type"].default  # noqa
+                or prev.chunk_type != ChunkType.PROSE
+                or curr.chunk_type != ChunkType.PROSE
             ):
-                # Check both are prose
-                if prev.chunk_type.value != "prose" or curr.chunk_type.value != "prose":
-                    continue
-
-            if prev.chunk_type.value != "prose" or curr.chunk_type.value != "prose":
                 continue
 
-            # Extract overlap from the end of the previous chunk
-            overlap_text = truncate_to_tokens(prev.text, self.overlap_tokens)
-            # Take the tail portion
-            prev_text = prev.text
-            if len(prev_text) > len(overlap_text):
-                # Get last overlap_tokens worth of text
-                tail = prev_text[len(prev_text) - len(overlap_text):]
-            else:
-                tail = prev_text
+            # Take the tail of the previous chunk's body (excluding its section
+            # header) on a token boundary, so we never bleed the previous chunk's
+            # bracketed header into the next chunk or slice mid-token.
+            prev_body = self._strip_section_header(prev.text)
+            tail = tail_tokens(prev_body, self.overlap_tokens)
 
             # Prepend to current chunk (after section path header if present)
             if tail.strip():
-                # Find end of section path header
-                header_end = 0
-                if curr.text.startswith("["):
-                    bracket_close = curr.text.find("] ")
-                    if bracket_close != -1:
-                        header_end = bracket_close + 2
-
-                header = curr.text[:header_end]
-                body = curr.text[header_end:]
+                header, body = self._split_section_header(curr.text)
                 new_text = header + "..." + tail.strip() + "... " + body
                 chunks[i] = Chunk(
                     text=new_text,
@@ -163,3 +147,21 @@ class HierarchicalChunker:
                     metadata=curr.metadata,
                     embedding=curr.embedding,
                 )
+
+    @staticmethod
+    def _split_section_header(text: str) -> tuple[str, str]:
+        """Split a chunk's leading ``[section_path] `` header from its body.
+
+        Returns ``(header, body)``; ``header`` is empty when no header is present.
+        """
+        if text.startswith("["):
+            bracket_close = text.find("] ")
+            if bracket_close != -1:
+                header_end = bracket_close + 2
+                return text[:header_end], text[header_end:]
+        return "", text
+
+    @classmethod
+    def _strip_section_header(cls, text: str) -> str:
+        """Return the chunk body with its leading ``[section_path] `` header removed."""
+        return cls._split_section_header(text)[1]

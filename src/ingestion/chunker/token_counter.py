@@ -24,3 +24,9 @@ def truncate_to_tokens(text: str, max_tokens: int) -> str:
     if len(tokens) <= max_tokens:
         return text
     return enc.decode(tokens[:max_tokens])
+
+
+def tail_tokens(text: str, max_tokens: int) -> str:
+    """Return the last ``max_tokens`` tokens of ``text``, decoded on a token boundary."""
+    enc = _get_encoder()
+    return enc.decode(enc.encode(text)[-max_tokens:])

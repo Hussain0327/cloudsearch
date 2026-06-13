@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from ingestion.chunker.hierarchical import HierarchicalChunker
 from ingestion.chunker.strategies import CodeChunkStrategy, ProseChunkStrategy, TableChunkStrategy
 from ingestion.chunker.token_counter import count_tokens
-from ingestion.models import ChunkType, ContentNode, ContentNodeType, CrawlResult
+from ingestion.models import Chunk, ChunkType, ContentNode, ContentNodeType, CrawlResult
 from ingestion.parser.aws import AWSParser
 
 
@@ -250,3 +250,65 @@ class TestHierarchicalChunker:
         # Should have code chunks for Python and JSON examples
         code_chunks = [c for c in chunks if c.chunk_type in (ChunkType.CODE, ChunkType.CONFIG)]
         assert len(code_chunks) >= 2
+
+
+class TestApplyOverlap:
+    """Regression tests for _apply_overlap section-boundary leakage."""
+
+    def _make_prose_chunk(self, body: str, section_path: str) -> Chunk:
+        text = f"[{section_path}] {body}" if section_path else body
+        return Chunk(
+            text=text,
+            chunk_type=ChunkType.PROSE,
+            section_path=section_path,
+            token_count=count_tokens(text),
+        )
+
+    def test_no_cross_section_overlap(self):
+        """A prose chunk must never receive another section's text as overlap."""
+        chunker = HierarchicalChunker(max_tokens=512, overlap_tokens=20)
+        chunks = [
+            self._make_prose_chunk("First section content about buckets.", "SectionA"),
+            self._make_prose_chunk("Second section content about functions.", "SectionB"),
+        ]
+        chunker._apply_overlap(chunks)
+
+        # SectionB's chunk must not contain any of SectionA's body or header.
+        assert "First section content" not in chunks[1].text
+        assert "[SectionA]" not in chunks[1].text
+        assert chunks[1].text == "[SectionB] Second section content about functions."
+
+    def test_same_section_overlap_excludes_prev_header(self):
+        """Overlap within a section uses the prev body tail, never its bracket header."""
+        chunker = HierarchicalChunker(max_tokens=512, overlap_tokens=10)
+        prev_body = (
+            "Bucket policies are resource-based policies that grant access "
+            "permissions to your bucket and the objects in it."
+        )
+        chunks = [
+            self._make_prose_chunk(prev_body, "S3 > Policies"),
+            self._make_prose_chunk("You can also use IAM identity policies.", "S3 > Policies"),
+        ]
+        chunker._apply_overlap(chunks)
+
+        # The header must appear exactly once (the curr chunk's own header) and the
+        # previous chunk's bracketed header must never be prepended.
+        assert chunks[1].text.count("[S3 > Policies]") == 1
+        assert chunks[1].text.startswith("[S3 > Policies] ")
+        # Overlap content came from the tail of the previous chunk's body.
+        assert "in it" in chunks[1].text
+
+    def test_non_prose_chunks_not_overlapped(self):
+        """Code/table chunks in the same section are never overlapped."""
+        chunker = HierarchicalChunker(max_tokens=512, overlap_tokens=20)
+        prose = self._make_prose_chunk("Some prose about config.", "Sec")
+        code = Chunk(
+            text="[Sec] ```python\nx = 1\n```",
+            chunk_type=ChunkType.CODE,
+            section_path="Sec",
+            token_count=count_tokens("[Sec] ```python\nx = 1\n```"),
+        )
+        chunks = [prose, code]
+        original_code_text = code.text
+        chunker._apply_overlap(chunks)
+        assert chunks[1].text == original_code_text

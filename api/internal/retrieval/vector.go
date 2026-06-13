@@ -53,7 +53,36 @@ func (s *VectorSearcher) Search(ctx context.Context, embedding pgvector.Vector, 
 		args = []any{embedding, limit}
 	}
 
-	rows, err := s.pool.Query(ctx, query, args...)
+	// Run inside an explicit transaction so SET LOCAL GUCs scope to this query
+	// only (a plain pool.Query auto-commits, making SET LOCAL a no-op) and
+	// never leak to other pooled-connection users.
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("vector search begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Ensure the HNSW dynamic candidate list is at least as large as the
+	// requested LIMIT (default ef_search is 40); otherwise an over-fetch
+	// (retrieveK up to 60) silently caps ANN recall. Add headroom for the
+	// service-filtered case where post-index filtering further reduces rows.
+	efSearch := limit
+	if efSearch < 100 {
+		efSearch = 100
+	}
+	if _, err := tx.Exec(ctx, fmt.Sprintf("SET LOCAL hnsw.ef_search = %d", efSearch)); err != nil {
+		return nil, fmt.Errorf("setting hnsw.ef_search: %w", err)
+	}
+	if len(services) > 0 {
+		// With a WHERE filter, pgvector applies the predicate AFTER the index
+		// returns candidates, which can yield far fewer rows than LIMIT.
+		// Iterative scan keeps scanning the index until LIMIT is satisfied.
+		if _, err := tx.Exec(ctx, "SET LOCAL hnsw.iterative_scan = 'strict_order'"); err != nil {
+			return nil, fmt.Errorf("setting hnsw.iterative_scan: %w", err)
+		}
+	}
+
+	rows, err := tx.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("vector search query: %w", err)
 	}
@@ -80,6 +109,14 @@ func (s *VectorSearcher) Search(ctx context.Context, embedding pgvector.Vector, 
 		rank++
 		results = append(results, sc)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
 
-	return results, rows.Err()
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("vector search commit: %w", err)
+	}
+
+	return results, nil
 }

@@ -9,10 +9,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy embedding service code
 COPY api/embed_service/main.py .
 
-# Ingestion package is mounted via docker-compose volume at /app/src/ingestion
-# This allows reusing the exact BGEEmbedder from the Python pipeline
+# Bake the ingestion package into the image so it runs standalone (not only
+# under docker-compose, which also bind-mounts ./src/ingestion for live edits).
+COPY src/ingestion /app/src/ingestion
 
 ENV PYTHONPATH=/app/src
+
+# Persist the Hugging Face model cache to a mounted volume so the ~1.3GB BGE
+# model is not re-downloaded on every container recreate.
+ENV HF_HOME=/opt/hf-cache
 
 EXPOSE 8081
 

@@ -9,6 +9,21 @@ import click
 import structlog
 
 
+def _read_urls_file(path: str) -> list[str]:
+    """Read newline-separated seed URLs, skipping blank lines and comments.
+
+    The comment check is applied to the STRIPPED line so indented comments
+    (e.g. ``  # note``) are correctly recognized and skipped.
+    """
+    urls: list[str] = []
+    with open(path) as f:
+        for raw in f:
+            line = raw.strip()
+            if line and not line.startswith("#"):
+                urls.append(line)
+    return urls
+
+
 def _setup_logging(level: str = "INFO") -> None:
     structlog.configure(
         processors=[
@@ -75,8 +90,7 @@ def ingest(
     service_list = list(services) if services else None
     extra_urls: list[str] = list(urls)
     if urls_file:
-        with open(urls_file) as f:
-            extra_urls.extend(line.strip() for line in f if line.strip() and not line.startswith("#"))
+        extra_urls.extend(_read_urls_file(urls_file))
     log.info(
         "starting_ingestion",
         services=service_list or "all",

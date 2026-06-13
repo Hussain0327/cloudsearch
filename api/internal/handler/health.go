@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -26,7 +28,10 @@ func (h *HealthHandler) Liveness(w http.ResponseWriter, r *http.Request) {
 
 // Readiness checks DB and embed service connectivity.
 func (h *HealthHandler) Readiness(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	// Bound the dependency checks so a hung DB connection-acquire (pool
+	// exhaustion / unresponsive backend) can't block the probe unboundedly.
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
 	checks := map[string]string{}
 
 	if err := h.pool.Ping(ctx); err != nil {
