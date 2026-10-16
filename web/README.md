@@ -1,8 +1,10 @@
 # CloudSearch — Web
 
 The frontend for **CloudSearch — "The Console"**: a precise, dense, keyboard-first
-AWS documentation search terminal. Dark-first developer tool styled like an IDE
-command palette fused with an observability dashboard.
+AWS documentation search terminal, plus the **EDGAR Spider** viewer that walks a
+Form 10-K and lights up every revenue, debt and financing, and share figure it
+finds. Dark-first developer tool styled like an IDE command palette fused with
+an observability dashboard.
 
 Built with **Next.js 16 (App Router, Turbopack) + React 19 + TypeScript +
 Tailwind CSS v4**, package manager **pnpm**.
@@ -56,10 +58,15 @@ Type-check without emitting: `pnpm exec tsc --noEmit`.
 The browser **never** calls the Go API directly (avoids CORS). All traffic is
 proxied through Next.js **Route Handlers** running on the Node.js runtime:
 
-| Browser request   | Proxy handler           | Upstream (Go API)        |
-| ----------------- | ----------------------- | ------------------------ |
-| `POST /api/search`| `app/api/search/route.ts` | `POST /api/v1/search`  |
-| `GET /api/stats`  | `app/api/stats/route.ts`  | `GET /api/v1/stats`    |
+| Browser request                    | Proxy handler                                  | Upstream (Go API)                    |
+| ---------------------------------- | ---------------------------------------------- | ------------------------------------ |
+| `POST /api/search`                 | `app/api/search/route.ts`                      | `POST /api/v1/search`                |
+| `GET /api/stats`                   | `app/api/stats/route.ts`                       | `GET /api/v1/stats`                  |
+| `GET /api/filings`                 | `app/api/filings/route.ts`                     | `GET /api/v1/filings`                |
+| `GET /api/filings/{id}`            | `app/api/filings/[id]/route.ts`                | `GET /api/v1/filings/{id}`           |
+| `GET /api/filings/{id}/document`   | `app/api/filings/[id]/document/route.ts`       | `GET /api/v1/filings/{id}/document`  |
+| `GET /api/filings/{id}/crawl?...`  | `app/api/filings/[id]/crawl/route.ts`          | `GET /api/v1/filings/{id}/crawl?...` |
+| `GET /api/filings/by-ticker/{t}`   | `app/api/filings/by-ticker/[ticker]/route.ts`  | `GET /api/v1/filings/by-ticker/{t}`  |
 
 - **Streaming search** (`stream: true`): the upstream **SSE** body is piped
   through unchanged with `Content-Type: text/event-stream`, `Cache-Control:
@@ -72,6 +79,41 @@ proxied through Next.js **Route Handlers** running on the Node.js runtime:
 The backend base URL comes from `process.env.BACKEND_URL` (default
 `http://localhost:8080`) — see `lib/config.ts`.
 
+## EDGAR Spider (`/filings`)
+
+`/filings` lists the indexed 10-Ks (seed data with `make edgar-seed` from the
+repo root). `/filings/[id]` is the viewer:
+
+- The annotated filing (`GET /api/filings/{id}/document`) is rendered on a
+  white "paper" pane. Every extracted fact is a `<span class="cs-fact"
+  data-fact-id data-category>`; the filing's own `<style>` blocks are scoped to
+  `.cs-doc` on the client (`lib/filing-dom.ts`) so they cannot restyle the app.
+- `lib/useCrawlStream.ts` consumes the SSE crawl
+  (`GET /api/filings/{id}/crawl?pace_ms=&from=&categories=`). Pause aborts the
+  stream; Play resumes from the next unseen `fact_index`, so nothing is
+  re-sent. Speed and category chips restart the live stream with new params.
+- `components/spider/Spider.tsx` is a procedural SVG spider: 8 two-segment
+  legs solved with 2-bone IK, planted feet that step in alternating tetrapod
+  groups, a critically damped body spring, and a dragline/silk trail. It
+  writes to the DOM from `requestAnimationFrame` (no React state per frame)
+  and snaps instead of tweening under `prefers-reduced-motion`.
+- `components/spider/SpiderStage.tsx` locates each fact's span, moves the
+  spider to it, marks it `cs-fact--hit` (plus a one-shot pulse), and, with
+  **Follow spider** on, centres it in the paper's own scroll container.
+- `components/spider/FoundPanel.tsx` is the ledger on the right (a bottom
+  sheet below 1100px): per-category chips with live counts, one row per fact
+  (formatted value, label, category tag), and a **Jump** row when a `link`
+  event points at another indexed filing (`/filings/{id}?autoplay=1`).
+
+Append `?autoplay=1` to a viewer URL to start the crawl on load.
+
+### Offline demo
+
+Build with `NEXT_PUBLIC_SPIDER_DEMO=1` (it is inlined at build time) and
+`/filings/demo?autoplay=1` runs the viewer against an inline fixture document
+and a mocked crawl stream (`lib/spider-demo.ts`), no Go API required. The
+`/filings` list shows a `demo` card when the flag is on.
+
 ## Project layout
 
 ```
@@ -80,9 +122,12 @@ app/
   globals.css           Design system — color tokens, type scale, animations (Tailwind v4 @theme)
   page.tsx              Search experience (/) — wrapped in <Suspense> for useSearchParams
   stats/page.tsx        Index statistics page (/stats)
+  filings/page.tsx      Indexed filings list (/filings)
+  filings/[id]/page.tsx Spider viewer (/filings/[id]; "demo" with the demo flag)
   api/
     search/route.ts     POST proxy (SSE pass-through + non-stream JSON)
     stats/route.ts      GET proxy (briefly revalidated)
+    filings/**          GET proxies for the filings API (SSE pass-through for crawl)
 components/
   TopBar.tsx            Fixed 56px top bar: wordmark, nav, ⌘K hint, theme toggle
   ThemeToggle.tsx       Dark/light toggle (dark default, persisted to localStorage)
@@ -90,12 +135,20 @@ components/
   search/               SearchBar, AnswerView, Citation chip/card/list, ResultMeta,
                         ServiceFilterChips, TopKStepper, StreamToggle, states, …
   stats/                StatsDashboard, ServiceTable (sortable), StatCard
+  spider/               FilingList, FilingViewer, SpiderStage, Spider (SVG), FoundPanel
 lib/
   types.ts              API DTOs mirroring the Go contract (snake_case keys)
   config.ts             BACKEND_URL + API prefix (server-only)
   utils.ts              cn(), serviceColor(), scoreHeatColor(), formatScore(), relativeTime()
   services.ts           The 20 seeded AWS service ids (filter chips)
   useSearchStream.ts    Client hook: POST /api/search + incremental SSE parsing
+  filings-types.ts      DTOs for the filings API (mirror docs/EDGAR_SPIDER.md)
+  useCrawlStream.ts     Client hook: crawl SSE with pause/resume, pace, category filter
+  sse.ts                Shared SSE frame parsing
+  filing-dom.ts         Scoped-style preparation + fact span lookup/scrolling
+  facts-format.ts       Money/percent/share formatting + category colors
+  proxy.ts              Shared upstream helpers for the filings proxies
+  spider-demo.ts        Offline fixture for NEXT_PUBLIC_SPIDER_DEMO=1
 ```
 
 Navigation: the **Stats** per-service table deep-links into the search page via
@@ -123,3 +176,10 @@ is an inversion mapped through identical token names via `[data-theme="light"]`.
 | ---------------------- | ------------------------ | -------------------------------------- |
 | `BACKEND_URL`          | `http://localhost:8080`  | Go API base URL (server-side only)     |
 | `NEXT_PUBLIC_BUILD_TAG`| `v0.1.0`                 | Build tag shown in the top bar/footer  |
+| `NEXT_PUBLIC_SPIDER_DEMO` | unset                 | `1` enables the offline `/filings/demo` viewer (build-time) |
+
+## Docker
+
+`web/Dockerfile` builds a Next.js standalone image (`output: "standalone"` in
+`next.config.ts`); `docker compose up web` from the repo root runs it against
+the `api` service with `BACKEND_URL=http://api:8080`.

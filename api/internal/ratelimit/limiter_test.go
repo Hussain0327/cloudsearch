@@ -108,7 +108,7 @@ func TestMiddleware_UsesXRealIP(t *testing.T) {
 
 	// Second request from same X-Real-IP (different RemoteAddr) should be limited
 	req2 := httptest.NewRequest(http.MethodGet, "/", nil)
-	req2.RemoteAddr = "127.0.0.1:8888" // different RemoteAddr
+	req2.RemoteAddr = "127.0.0.1:8888"           // different RemoteAddr
 	req2.Header.Set("X-Real-IP", "203.0.113.50") // same real IP
 	w2 := httptest.NewRecorder()
 	handler.ServeHTTP(w2, req2)

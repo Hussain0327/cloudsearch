@@ -29,15 +29,15 @@ type Document struct {
 
 // Chunk maps to the chunks table.
 type Chunk struct {
-	ID          int64            `json:"id"`
-	DocumentID  int64            `json:"document_id"`
-	Text        string           `json:"text"`
-	ChunkType   ChunkType        `json:"chunk_type"`
-	SectionPath string           `json:"section_path"`
-	TokenCount  int              `json:"token_count"`
-	Metadata    map[string]any   `json:"metadata"`
-	ChunkIndex  int              `json:"chunk_index"`
-	Embedding   pgvector.Vector  `json:"-"`
+	ID          int64           `json:"id"`
+	DocumentID  int64           `json:"document_id"`
+	Text        string          `json:"text"`
+	ChunkType   ChunkType       `json:"chunk_type"`
+	SectionPath string          `json:"section_path"`
+	TokenCount  int             `json:"token_count"`
+	Metadata    map[string]any  `json:"metadata"`
+	ChunkIndex  int             `json:"chunk_index"`
+	Embedding   pgvector.Vector `json:"-"`
 }
 
 // ScoredChunk is a Chunk with retrieval scoring metadata.

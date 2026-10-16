@@ -21,7 +21,7 @@ type Server struct {
 }
 
 // New creates a configured HTTP server.
-func New(port int, corsOrigins []string, health *handler.HealthHandler, search *handler.SearchHandler, stats *handler.StatsHandler, rl *ratelimit.Limiter) *Server {
+func New(port int, corsOrigins []string, health *handler.HealthHandler, search *handler.SearchHandler, stats *handler.StatsHandler, filings *handler.FilingsHandler, rl *ratelimit.Limiter) *Server {
 	r := chi.NewRouter()
 
 	// Global middleware
@@ -36,7 +36,7 @@ func New(port int, corsOrigins []string, health *handler.HealthHandler, search *
 	// routes apply their own deadline via context.
 
 	// Register routes
-	RegisterRoutes(r, health, search, stats, rl)
+	RegisterRoutes(r, health, search, stats, filings, rl)
 
 	return &Server{
 		httpServer: &http.Server{

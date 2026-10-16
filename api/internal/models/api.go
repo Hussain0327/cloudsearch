@@ -15,9 +15,9 @@ type SearchRequest struct {
 
 // SearchResponse is the output DTO for non-streaming responses.
 type SearchResponse struct {
-	Answer   string           `json:"answer"`
-	Citations []Citation      `json:"citations"`
-	Metadata ResponseMetadata `json:"metadata"`
+	Answer    string           `json:"answer"`
+	Citations []Citation       `json:"citations"`
+	Metadata  ResponseMetadata `json:"metadata"`
 }
 
 // Citation represents a source chunk referenced in the answer.
@@ -33,18 +33,20 @@ type Citation struct {
 
 // ResponseMetadata contains timing and retrieval info.
 type ResponseMetadata struct {
-	QueryTimeMS    int64  `json:"query_time_ms"`
-	ChunksFound    int    `json:"chunks_found"`
-	CacheHit       bool   `json:"cache_hit"`
-	Model          string `json:"model"`
+	QueryTimeMS int64  `json:"query_time_ms"`
+	ChunksFound int    `json:"chunks_found"`
+	CacheHit    bool   `json:"cache_hit"`
+	Model       string `json:"model"`
 }
 
 // StatsResponse is the output DTO for GET /api/v1/stats.
 type StatsResponse struct {
-	TotalDocuments int64            `json:"total_documents"`
-	TotalChunks    int64            `json:"total_chunks"`
-	Services       []ServiceStats   `json:"services"`
-	IndexedAt      time.Time        `json:"indexed_at"`
+	TotalDocuments int64          `json:"total_documents"`
+	TotalChunks    int64          `json:"total_chunks"`
+	TotalFilings   int64          `json:"total_filings"`
+	TotalFacts     int64          `json:"total_facts"`
+	Services       []ServiceStats `json:"services"`
+	IndexedAt      time.Time      `json:"indexed_at"`
 }
 
 // ServiceStats contains per-service document/chunk counts.

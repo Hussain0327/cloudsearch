@@ -11,6 +11,7 @@ const BUILD_TAG = process.env.NEXT_PUBLIC_BUILD_TAG ?? "v0.1.0";
 
 const NAV: { href: string; label: string }[] = [
   { href: "/", label: "Search" },
+  { href: "/filings", label: "Spider" },
   { href: "/stats", label: "Stats" },
 ];
 

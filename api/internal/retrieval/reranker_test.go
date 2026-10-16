@@ -182,14 +182,16 @@ func TestFuseRRF_TopKZeroReturnsAll(t *testing.T) {
 // to enable detailed logging output including HTTP request/response info."
 //
 // Vector search results (semantic similarity):
-//   rank 1: id=100 "S3 logging overview: server-access logging and CloudTrail" (conceptually related to "logging" but wrong topic)
-//   rank 2: id=42  "Use --debug flag with aws s3 cp..." (correct answer, but vector similarity slightly lower because text says "debug" not "verbose")
-//   rank 3: id=101 "CloudWatch Logs integration for S3 bucket events" (semantically about logging, not the CLI)
+//
+//	rank 1: id=100 "S3 logging overview: server-access logging and CloudTrail" (conceptually related to "logging" but wrong topic)
+//	rank 2: id=42  "Use --debug flag with aws s3 cp..." (correct answer, but vector similarity slightly lower because text says "debug" not "verbose")
+//	rank 3: id=101 "CloudWatch Logs integration for S3 bucket events" (semantically about logging, not the CLI)
 //
 // Keyword search results (BM25 on "verbose logging aws s3 cp"):
-//   rank 1: id=42  "Use --debug flag with aws s3 cp..." (matches "aws", "s3", "cp", "logging")
-//   rank 2: id=200 "aws s3 cp command reference: copies files" (matches "aws", "s3", "cp" but not about logging)
-//   rank 3: id=201 "Verbose output in AWS CLI global options" (matches "verbose" and "aws" but not specific to s3 cp)
+//
+//	rank 1: id=42  "Use --debug flag with aws s3 cp..." (matches "aws", "s3", "cp", "logging")
+//	rank 2: id=200 "aws s3 cp command reference: copies files" (matches "aws", "s3", "cp" but not about logging)
+//	rank 3: id=201 "Verbose output in AWS CLI global options" (matches "verbose" and "aws" but not specific to s3 cp)
 //
 // Vector-only would return id=100 as top result (wrong).
 // Keyword-only would return id=42 as top result (correct, but by luck of keyword overlap).

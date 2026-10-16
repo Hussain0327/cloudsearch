@@ -1,4 +1,97 @@
-# CloudSearch
+# EDGAR Spider (on the CloudSearch stack)
+
+A visual crawler for SEC filings. It fetches a company's Form 10-K from EDGAR,
+extracts every notable figure (revenue, debt and financing, share counts, and
+other key numbers) with exact positions in the document, and then an animated
+spider walks the rendered filing from fact to fact while a "Found" panel fills
+up. Mentions of other companies in the universe become links, so the spider
+can hop from Apple's 10-K to Microsoft's.
+
+Under it is the original CloudSearch stack: Python ingestion, a Go API with
+SSE streaming, Postgres, and a Next.js front end. The AWS-docs search and RAG
+features still work and are documented further down.
+
+## How the spider works
+
+```
+EDGAR (data.sec.gov / www.sec.gov)
+   │  submissions JSON → latest 10-K → primary iXBRL document
+   ▼
+Python: ingestion.edgar
+   ├─ pass 1  Inline XBRL  ix:nonFraction / ix:nonNumeric → exact facts with concept names
+   ├─ pass 2  regex over untagged text  "$24.6 billion", "3.600% Notes due 2042", "14,776,353,000 shares"
+   ├─ pass 3  company mentions → filing_links (the "web" the spider crawls)
+   └─ wraps each fact:  <span class="cs-fact" data-fact-id="f-00042" data-category="debt">…</span>
+   ▼
+Postgres: filings · facts · filing_links          (alembic revision 002)
+   ▼
+Go API:  GET /api/v1/filings/{id}/crawl  → SSE  start · fact · link · done   (paced replay)
+   ▼
+Next.js /filings/[id]:  annotated document + SVG spider with IK legs + Found panel
+```
+
+Contract for all three layers: [`docs/EDGAR_SPIDER.md`](docs/EDGAR_SPIDER.md).
+
+## Quick start (spider)
+
+```bash
+# 0. Prerequisites: Docker, Go 1.23+, Python 3.11+, Node 22 + pnpm
+make db-up && make setup && make migrate      # Postgres (pgvector image) + schema
+
+# 1. Data: either the bundled offline samples...
+make edgar-seed                               # synthetic Apple + Microsoft 10-K samples
+
+#    ...or real filings from EDGAR (SEC requires a contact User-Agent)
+export SEC_USER_AGENT="Your Name you@example.com"
+make edgar-ingest ARGS="--tickers AAPL MSFT AMZN GOOGL NVDA"
+
+# 2. API + web
+make api-dev                                  # :8080  (terminal 2)
+make web-dev                                  # :3000  (terminal 3)
+open http://localhost:3000/filings
+```
+
+Or everything in containers: `make docker-up`, then
+`docker compose run --rm edgar-seed`, then open http://localhost:3000/filings.
+
+Try the extractor on any local filing without a database:
+
+```bash
+make edgar-extract FILE=path/to/aapl-20250927.htm ARGS="--ticker AAPL"
+```
+
+### Spider API
+
+```
+GET /api/v1/filings                      indexed filings with per-category counts
+GET /api/v1/filings/{id}                 filing + facts (document order) + links
+GET /api/v1/filings/by-ticker/{ticker}   latest filing for a ticker
+GET /api/v1/filings/{id}/document        annotated HTML (sanitized, CSP'd)
+GET /api/v1/filings/{id}/crawl           SSE replay: ?pace_ms=120&from=0&categories=revenue,debt
+```
+
+### What is real and what is sample data
+
+`make edgar-seed` loads two **synthetic** filings bundled in
+`src/ingestion/edgar/demo/`. They copy the structure of real Inline XBRL
+10-Ks (cover page, securities table, TOC, Items, financial tables, hidden
+iXBRL header) so the whole pipeline is exercised offline, but their figures
+are illustrative. `make edgar-ingest` replaces them with the real documents.
+
+### Status
+
+- Extractor, store, API and viewer are complete and tested (Python 37 tests,
+  Go handler tests with a fake store, web typecheck/lint/build in CI).
+- Live EDGAR ingestion is implemented against the documented endpoints and
+  fair-access rules but could not be run from the sandbox this was built in
+  (no outbound access to sec.gov). First thing to do on your machine:
+  `make edgar-ingest ARGS="--tickers AAPL"` and look at the fact list.
+- Not done yet: a labeled precision/recall set for the extractor, and
+  exhibit-level hops (indentures) for the spider.
+
+---
+
+# CloudSearch (AWS docs search + RAG)
 
 Hybrid search engine for AWS documentation with RAG-powered answers. Fully open-source stack — no API keys required.
 
@@ -223,6 +316,7 @@ Running the pipeline twice does not duplicate data:
 ```
 cloudsearch/
 ├── src/ingestion/           # Python ingestion pipeline
+│   ├── edgar/               # SEC EDGAR client, iXBRL+regex fact extractor, store, CLI, demo samples
 │   ├── crawler/             # BFS crawler with rate limiting + state
 │   ├── parser/              # HTML → ContentNode tree
 │   ├── chunker/             # Hierarchical type-aware chunking
@@ -242,7 +336,9 @@ cloudsearch/
 │       ├── ratelimit/       # Per-IP token bucket
 │       ├── server/          # HTTP lifecycle, routes, middleware
 │       └── handler/         # search, health, stats handlers
-├── tests/                   # Python tests (36 unit + 24 recall)
+├── web/                     # Next.js app: search console, stats, /filings spider viewer
+├── docs/EDGAR_SPIDER.md     # Data + API contract for the spider feature
+├── tests/                   # Python tests (unit, Postgres-backed, 24 recall)
 ├── alembic/                 # Database migrations
 ├── docker-compose.yml       # Postgres + embed service + API
 └── Makefile                 # All build/run/test targets
@@ -274,8 +370,12 @@ make lint         # Ruff check + format
 make api-dev      # Run Go API server (go run)
 make api-build    # Build Go binary
 make api-test     # Go tests
-make docker-up    # Full stack via Docker Compose
+make docker-up    # Full stack via Docker Compose (postgres, embed, api, web)
 make docker-down  # Tear down
+make edgar-seed   # Load synthetic 10-K samples for the spider
+make edgar-ingest # Fetch real 10-Ks from EDGAR (SEC_USER_AGENT required)
+make edgar-extract# Run the extractor on a local file (FILE=...)
+make web-dev      # Next.js dev server
 ```
 
 ## Configuration

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SYNTHETIC SAMPLE for demos and tests. Modeled on the structure of an
+  Inline XBRL Form 10-K as filed on SEC EDGAR, but abridged and with
+  illustrative figures. It is not an actual filing. Use
+  `python -m ingestion edgar ingest --tickers AAPL` for the real document.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ix="http://www.xbrl.org/2013/inlineXBRL" xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:dei="http://xbrl.sec.gov/dei/2024" xmlns:us-gaap="http://fasb.org/us-gaap/2024">
+<head>
+<title>aapl-20250927 (sample)</title>
+<script>alert("this must be stripped")</script>
+<style>
+  body { font-family: "Times New Roman", serif; font-size: 10pt; }
+  .c { text-align: center; }
+  .r { text-align: right; }
+  table { border-collapse: collapse; }
+  td { padding: 2px 6px; vertical-align: bottom; }
+  .hdr { font-weight: 700; font-size: 11pt; margin-top: 18pt; }
+  .rule { border-top: 1px solid #000; }
+</style>
+</head>
+<body>
+<div style="display:none"><ix:header><ix:hidden>
+<ix:nonnumeric name="dei:AmendmentFlag" contextref="c-1" id="h-1">false</ix:nonnumeric>
+<ix:nonnumeric name="dei:DocumentFiscalYearFocus" contextref="c-1" id="h-2">2025</ix:nonnumeric>
+<ix:nonnumeric name="dei:DocumentType" contextref="c-1" id="h-3">10-K</ix:nonnumeric>
+<ix:nonnumeric name="dei:EntityCentralIndexKey" contextref="c-1" id="h-4">0000320193</ix:nonnumeric>
+</ix:hidden>
+<ix:resources>
+<xbrli:context id="c-1"><xbrli:entity><xbrli:identifier scheme="http://www.sec.gov/CIK">0000320193</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:startDate>2024-09-29</xbrli:startDate><xbrli:endDate>2025-09-27</xbrli:endDate></xbrli:period></xbrli:context>
+<xbrli:context id="c-2"><xbrli:entity><xbrli:identifier scheme="http://www.sec.gov/CIK">0000320193</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:instant>2025-03-28</xbrli:instant></xbrli:period></xbrli:context>
+<xbrli:context id="c-3"><xbrli:entity><xbrli:identifier scheme="http://www.sec.gov/CIK">0000320193</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:instant>2025-10-17</xbrli:instant></xbrli:period></xbrli:context>
+<xbrli:context id="c-4"><xbrli:entity><xbrli:identifier scheme="http://www.sec.gov/CIK">0000320193</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:startDate>2023-10-01</xbrli:startDate><xbrli:endDate>2024-09-28</xbrli:endDate></xbrli:period></xbrli:context>
+<xbrli:context id="c-5"><xbrli:entity><xbrli:identifier scheme="http://www.sec.gov/CIK">0000320193</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:startDate>2022-09-25</xbrli:startDate><xbrli:endDate>2023-09-30</xbrli:endDate></xbrli:period></xbrli:context>
+<xbrli:context id="c-6"><xbrli:entity><xbrli:identifier scheme="http://www.sec.gov/CIK">0000320193</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:instant>2025-09-27</xbrli:instant></xbrli:period></xbrli:context>
+<xbrli:unit id="usd"><xbrli:measure>iso4217:USD</xbrli:measure></xbrli:unit>
+<xbrli:unit id="shares"><xbrli:measure>xbrli:shares</xbrli:measure></xbrli:unit>
+<xbrli:unit id="number"><xbrli:measure>xbrli:pure</xbrli:measure></xbrli:unit>
+</ix:resources></ix:header></div>
+
+<!-- ======================= COVER PAGE ======================= -->
+<div class="c" style="font-weight:700;font-size:12pt">UNITED STATES<br/>SECURITIES AND EXCHANGE COMMISSION<br/>Washington, D.C. 20549</div>
+<div class="c" style="font-weight:700;font-size:14pt;margin-top:12pt">FORM <ix:nonnumeric name="dei:DocumentType" contextref="c-1" id="f-cover-1">10-K</ix:nonnumeric></div>
+<div class="c" style="margin-top:8pt">&#9746; ANNUAL REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934</div>
+<div class="c">For the fiscal year ended <ix:nonnumeric name="dei:DocumentPeriodEndDate" contextref="c-1" id="f-cover-2">September 27, 2025</ix:nonnumeric></div>
+<div class="c">or</div>
+<div class="c">&#9744; TRANSITION REPORT PURSUANT TO SECTION 13 OR 15(d) OF THE SECURITIES EXCHANGE ACT OF 1934</div>
+<div class="c">Commission File Number: <ix:nonnumeric name="dei:EntityFileNumber" contextref="c-1" id="f-cover-3">001-36743</ix:nonnumeric></div>
+<div class="c" style="font-weight:700;font-size:16pt;margin-top:14pt"><ix:nonnumeric name="dei:EntityRegistrantName" contextref="c-1" id="f-cover-4">Apple Inc.</ix:nonnumeric></div>
+<div class="c">(Exact name of Registrant as specified in its charter)</div>
+<table style="width:100%;margin-top:10pt"><tr>
+<td style="width:50%" class="c"><ix:nonnumeric name="dei:EntityIncorporationStateCountryCode" contextref="c-1" id="f-cover-5">California</ix:nonnumeric><br/>(State or other jurisdiction<br/>of incorporation or organization)</td>
+<td style="width:50%" class="c"><ix:nonnumeric name="dei:EntityTaxIdentificationNumber" contextref="c-1" id="f-cover-6">94-2404110</ix:nonnumeric><br/>(I.R.S. Employer Identification No.)</td>
+</tr></table>
+<div class="c" style="margin-top:8pt">One Apple Park Way<br/>Cupertino, California 95014<br/>(Address of principal executive offices) (Zip Code)</div>
+<div class="c">(408) 996-1010<br/>(Registrant&#8217;s telephone number, including area code)</div>
+<div class="c" style="margin-top:10pt">Securities registered pursuant to Section 12(b) of the Act:</div>
+<table style="width:100%">
+<tr><td><u>Title of each class</u></td><td class="c"><u>Trading symbol(s)</u></td><td class="c"><u>Name of each exchange on which registered</u></td></tr>
+<tr><td><ix:nonnumeric name="dei:Security12bTitle" contextref="c-1" id="f-sec-1">Common Stock, $0.00001 par value per share</ix:nonnumeric></td><td class="c"><ix:nonnumeric name="dei:TradingSymbol" contextref="c-1" id="f-sec-2">AAPL</ix:nonnumeric></td><td class="c">The Nasdaq Stock Market LLC</td></tr>
+<tr><td><ix:nonnumeric name="dei:Security12bTitle" contextref="c-1" id="f-sec-3">0.000% Notes due 2025</ix:nonnumeric></td><td class="c">&#8212;</td><td class="c">The Nasdaq Stock Market LLC</td></tr>
+<tr><td><ix:nonnumeric name="dei:Security12bTitle" contextref="c-1" id="f-sec-4">1.625% Notes due 2026</ix:nonnumeric></td><td class="c">&#8212;</td><td class="c">The Nasdaq Stock Market LLC</td></tr>
+<tr><td><ix:nonnumeric name="dei:Security12bTitle" contextref="c-1" id="f-sec-5">2.000% Notes due 2027</ix:nonnumeric></td><td class="c">&#8212;</td><td class="c">The Nasdaq Stock Market LLC</td></tr>
+<tr><td><ix:nonnumeric name="dei:Security12bTitle" contextref="c-1" id="f-sec-6">1.375% Notes due 2029</ix:nonnumeric></td><td class="c">&#8212;</td><td class="c">The Nasdaq Stock Market LLC</td></tr>
+<tr><td><ix:nonnumeric name="dei:Security12bTitle" contextref="c-1" id="f-sec-7">3.050% Notes due 2029</ix:nonnumeric></td><td class="c">&#8212;</td><td class="c">The Nasdaq Stock Market LLC</td></tr>
+<tr><td><ix:nonnumeric name="dei:Security12bTitle" contextref="c-1" id="f-sec-8">0.500% Notes due 2031</ix:nonnumeric></td><td class="c">&#8212;</td><td class="c">The Nasdaq Stock Market LLC</td></tr>
+<tr><td><ix:nonnumeric name="dei:Security12bTitle" contextref="c-1" id="f-sec-9">3.600% Notes due 2042</ix:nonnumeric></td><td class="c">&#8212;</td><td class="c">The Nasdaq Stock Market LLC</td></tr>
+</table>
+<div class="c" style="margin-top:6pt">Securities registered pursuant to Section 12(g) of the Act: None</div>
+<p>Indicate by check mark if the Registrant is a well-known seasoned issuer, as defined in Rule 405 of the Securities Act. Yes &#9746; No &#9744;</p>
+<p>Indicate by check mark if the Registrant is not required to file reports pursuant to Section 13 or Section 15(d) of the Act. Yes &#9744; No &#9746;</p>
+<p>Indicate by check mark whether the Registrant (1) has filed all reports required to be filed by Section 13 or 15(d) of the Securities Exchange Act of 1934 during the preceding 12 months (or for such shorter period that the Registrant was required to file such reports), and (2) has been subject to such filing requirements for the past 90 days. Yes &#9746; No &#9744;</p>
+<p>Indicate by check mark whether the Registrant has submitted electronically every Interactive Data File required to be submitted pursuant to Rule 405 of Regulation S-T (&#167;232.405 of this chapter) during the preceding 12 months (or for such shorter period that the Registrant was required to submit such files). Yes &#9746; No &#9744;</p>
+<p>Indicate by check mark whether the Registrant is a large accelerated filer, an accelerated filer, a non-accelerated filer, a smaller reporting company, or an emerging growth company. See the definitions of &#8220;large accelerated filer,&#8221; &#8220;accelerated filer,&#8221; &#8220;smaller reporting company,&#8221; and &#8220;emerging growth company&#8221; in Rule 12b-2 of the Exchange Act.</p>
+<table style="width:100%"><tr><td>Large accelerated filer &#9746;</td><td>Accelerated filer &#9744;</td></tr><tr><td>Non-accelerated filer &#9744;</td><td>Smaller reporting company &#9744;</td></tr><tr><td></td><td>Emerging growth company &#9744;</td></tr></table>
+<p>Indicate by check mark whether the Registrant is a shell company (as defined in Rule 12b-2 of the Act). Yes &#9744; No &#9746;</p>
+<p>The aggregate market value of the voting and non-voting stock held by non-affiliates of the Registrant, as of March 28, 2025, the last business day of the Registrant&#8217;s most recently completed second fiscal quarter, was approximately $<ix:nonfraction name="dei:EntityPublicFloat" contextref="c-2" unitref="usd" decimals="-6" scale="0" format="ixt:num-dot-decimal" id="f-float">3,253,431,000,000</ix:nonfraction>. Solely for purposes of this disclosure, shares of common stock held by executive officers and directors of the Registrant as of such date have been excluded because such persons may be deemed to be affiliates.</p>
+<p class="c"><ix:nonfraction name="dei:EntityCommonStockSharesOutstanding" contextref="c-3" unitref="shares" decimals="-3" scale="0" format="ixt:num-dot-decimal" id="f-shares">14,776,353,000</ix:nonfraction> shares of common stock were issued and outstanding as of October 17, 2025.</p>
+<div class="c hdr">DOCUMENTS INCORPORATED BY REFERENCE</div>
+<p>Portions of the Registrant&#8217;s definitive proxy statement relating to its 2026 annual meeting of shareholders are incorporated by reference into Part III of this Annual Report on Form 10-K where indicated.</p>
+<hr/>
+
+<!-- ======================= TABLE OF CONTENTS ======================= -->
+<div class="c hdr"><a id="toc"></a>Apple Inc.<br/>Form 10-K<br/>For the Fiscal Year Ended September 27, 2025<br/>TABLE OF CONTENTS</div>
+<table style="width:100%">
+<tr><td></td><td></td><td class="r">Page</td></tr>
+<tr><td colspan="3" class="c"><b>Part I</b></td></tr>
+<tr><td><a href="#item1">Item 1.</a></td><td><a href="#item1">Business</a></td><td class="r">1</td></tr>
+<tr><td><a href="#item1a">Item 1A.</a></td><td><a href="#item1a">Risk Factors</a></td><td class="r">5</td></tr>
+<tr><td><a href="#item2">Item 2.</a></td><td><a href="#item2">Properties</a></td><td class="r">17</td></tr>
+<tr><td colspan="3" class="c"><b>Part II</b></td></tr>
+<tr><td><a href="#item5">Item 5.</a></td><td><a href="#item5">Market for Registrant&#8217;s Common Equity, Related Stockholder Matters and Issuer Purchases of Equity Securities</a></td><td class="r">19</td></tr>
+<tr><td><a href="#item7">Item 7.</a></td><td><a href="#item7">Management&#8217;s Discussion and Analysis of Financial Condition and Results of Operations</a></td><td class="r">21</td></tr>
+<tr><td><a href="#item8">Item 8.</a></td><td><a href="#item8">Financial Statements and Supplementary Data</a></td><td class="r">28</td></tr>
+</table>
+<hr/>
+
+<!-- ======================= PART I ======================= -->
+<div class="c hdr">PART I</div>
+<div class="hdr"><a id="item1"></a>Item 1.&#160;&#160;&#160;&#160;Business</div>
+<div class="hdr" style="font-size:10pt">Company Background</div>
+<p>The Company designs, manufactures and markets smartphones, personal computers, tablets, wearables and accessories, and sells a variety of related services. The Company&#8217;s fiscal year is the 52- or 53-week period that ends on the last Saturday of September.</p>
+<div class="hdr" style="font-size:10pt">Competition</div>
+<p>The markets for the Company&#8217;s products and services are highly competitive. Competitors include Microsoft, Alphabet and Amazon in services and platforms, and NVIDIA in silicon for accelerated computing. The Company&#8217;s ability to compete depends on its continued investment in research and development.</p>
+<div class="hdr" style="font-size:10pt">Human Capital</div>
+<p>As of September 27, 2025, the Company had approximately 166,000 full-time equivalent employees.</p>
+
+<div class="hdr"><a id="item1a"></a>Item 1A.&#160;&#160;&#160;&#160;Risk Factors</div>
+<p>A significant portion of the Company&#8217;s net sales is derived from a single product line. In 2025, iPhone represented 51% of total net sales. Fluctuations in demand for iPhone can materially affect results.</p>
+<p>The Company has outstanding debt and may incur additional debt. As of September 27, 2025, the Company had $<ix:nonfraction name="us-gaap:LongTermDebt" contextref="c-6" unitref="usd" decimals="-8" scale="9" format="ixt:num-dot-decimal" id="f-ltd">98.2</ix:nonfraction> billion of term debt outstanding. Changes in interest rates, which averaged 3.3% on the Company&#8217;s fixed-rate notes, could increase borrowing costs.</p>
+
+<div class="hdr"><a id="item2"></a>Item 2.&#160;&#160;&#160;&#160;Properties</div>
+<p>The Company&#8217;s headquarters is located in Cupertino, California. The Company owns or leases facilities and land for corporate functions, R&amp;D, data centers, retail and other purposes.</p>
+<hr/>
+
+<!-- ======================= PART II ======================= -->
+<div class="c hdr">PART II</div>
+<div class="hdr"><a id="item5"></a>Item 5.&#160;&#160;&#160;&#160;Market for Registrant&#8217;s Common Equity, Related Stockholder Matters and Issuer Purchases of Equity Securities</div>
+<p>During 2025 the Company repurchased <ix:nonfraction name="us-gaap:StockRepurchasedAndRetiredDuringPeriodShares" contextref="c-1" unitref="shares" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rep-sh">499</ix:nonfraction> million shares of its common stock for $<ix:nonfraction name="us-gaap:StockRepurchasedAndRetiredDuringPeriodValue" contextref="c-1" unitref="usd" decimals="-8" scale="9" format="ixt:num-dot-decimal" id="f-rep-val">95.0</ix:nonfraction> billion. The Company&#8217;s share repurchase program authorizes up to $110 billion of repurchases, of which $<ix:nonfraction name="us-gaap:StockRepurchaseProgramRemainingAuthorizedRepurchaseAmount1" contextref="c-6" unitref="usd" decimals="-8" scale="9" format="ixt:num-dot-decimal" id="f-rep-rem">41.2</ix:nonfraction> billion remained available.</p>
+<p>As of October 17, 2025, there were 23,100 shareholders of record. The Company paid quarterly dividends of $<ix:nonfraction name="us-gaap:CommonStockDividendsPerShareDeclared" contextref="c-1" unitref="usd" decimals="2" scale="0" format="ixt:num-dot-decimal" id="f-div">0.26</ix:nonfraction> per share.</p>
+
+<div class="hdr"><a id="item7"></a>Item 7.&#160;&#160;&#160;&#160;Management&#8217;s Discussion and Analysis of Financial Condition and Results of Operations</div>
+<div class="hdr" style="font-size:10pt">Fiscal 2025 Highlights</div>
+<p>Total net sales increased 6% or $24.6 billion during 2025 compared to 2024, driven primarily by higher net sales of iPhone and Services. Services net sales grew 13% year over year.</p>
+<div class="hdr" style="font-size:10pt">Products and Services Performance</div>
+<table style="width:100%">
+<tr><td></td><td class="r"><b>2025</b></td><td class="r"><b>Change</b></td><td class="r"><b>2024</b></td><td class="r"><b>Change</b></td><td class="r"><b>2023</b></td></tr>
+<tr><td>iPhone</td><td class="r">$ <ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-1" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-iph-25">209,586</ix:nonfraction></td><td class="r">4 %</td><td class="r">$ <ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-4" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-iph-24">201,183</ix:nonfraction></td><td class="r">&#8212; %</td><td class="r">$ <ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-5" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-iph-23">200,583</ix:nonfraction></td></tr>
+<tr><td>Mac</td><td class="r"><ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-1" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-mac-25">33,710</ix:nonfraction></td><td class="r">12 %</td><td class="r"><ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-4" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-mac-24">29,984</ix:nonfraction></td><td class="r">2 %</td><td class="r"><ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-5" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-mac-23">29,357</ix:nonfraction></td></tr>
+<tr><td>Services</td><td class="r"><ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-1" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-svc-25">109,158</ix:nonfraction></td><td class="r">13 %</td><td class="r"><ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-4" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-svc-24">96,169</ix:nonfraction></td><td class="r">13 %</td><td class="r"><ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-5" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-svc-23">85,200</ix:nonfraction></td></tr>
+<tr class="rule"><td><b>Total net sales</b></td><td class="r"><b>$ <ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-1" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-tot-25">415,644</ix:nonfraction></b></td><td class="r">6 %</td><td class="r"><b>$ <ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-4" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-tot-24">391,035</ix:nonfraction></b></td><td class="r">2 %</td><td class="r"><b>$ <ix:nonfraction name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" contextref="c-5" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-rev-tot-23">383,285</ix:nonfraction></b></td></tr>
+</table>
+<div class="hdr" style="font-size:10pt">Liquidity and Capital Resources</div>
+<p>The Company believes its balances of unrestricted cash, cash equivalents and marketable securities, along with cash generated by ongoing operations and continued access to debt markets, will be sufficient to satisfy its cash requirements. As of September 27, 2025, the Company had $<ix:nonfraction name="us-gaap:CommercialPaper" contextref="c-6" unitref="usd" decimals="-8" scale="9" format="ixt:num-dot-decimal" id="f-cp">2.0</ix:nonfraction> billion of commercial paper outstanding, and <ix:nonfraction name="us-gaap:LongTermDebtNoncurrent" contextref="c-6" unitref="usd" decimals="-8" scale="9" format="ixt:num-dot-decimal" id="f-ltd-nc">84.1</ix:nonfraction> billion of non-current term debt.</p>
+
+<div class="hdr"><a id="item8"></a>Item 8.&#160;&#160;&#160;&#160;Financial Statements and Supplementary Data</div>
+<div class="c hdr" style="font-size:10pt">CONSOLIDATED STATEMENTS OF OPERATIONS<br/>(In millions, except number of shares, which are reflected in thousands, and per-share amounts)</div>
+<table style="width:100%">
+<tr><td></td><td class="r"><b>2025</b></td><td class="r"><b>2024</b></td><td class="r"><b>2023</b></td></tr>
+<tr><td>Net income</td><td class="r">$ <ix:nonfraction name="us-gaap:NetIncomeLoss" contextref="c-1" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-ni-25">112,010</ix:nonfraction></td><td class="r">$ <ix:nonfraction name="us-gaap:NetIncomeLoss" contextref="c-4" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-ni-24">93,736</ix:nonfraction></td><td class="r">$ <ix:nonfraction name="us-gaap:NetIncomeLoss" contextref="c-5" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-ni-23">96,995</ix:nonfraction></td></tr>
+<tr><td>Diluted earnings per share</td><td class="r">$ <ix:nonfraction name="us-gaap:EarningsPerShareDiluted" contextref="c-1" unitref="usd" decimals="2" scale="0" format="ixt:num-dot-decimal" id="f-eps-25">7.46</ix:nonfraction></td><td class="r">$ <ix:nonfraction name="us-gaap:EarningsPerShareDiluted" contextref="c-4" unitref="usd" decimals="2" scale="0" format="ixt:num-dot-decimal" id="f-eps-24">6.08</ix:nonfraction></td><td class="r">$ <ix:nonfraction name="us-gaap:EarningsPerShareDiluted" contextref="c-5" unitref="usd" decimals="2" scale="0" format="ixt:num-dot-decimal" id="f-eps-23">6.13</ix:nonfraction></td></tr>
+<tr><td>Shares used in computing diluted earnings per share</td><td class="r"><ix:nonfraction name="us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding" contextref="c-1" unitref="shares" decimals="-3" scale="3" format="ixt:num-dot-decimal" id="f-wsh-25">15,011,236</ix:nonfraction></td><td class="r"><ix:nonfraction name="us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding" contextref="c-4" unitref="shares" decimals="-3" scale="3" format="ixt:num-dot-decimal" id="f-wsh-24">15,408,095</ix:nonfraction></td><td class="r"><ix:nonfraction name="us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding" contextref="c-5" unitref="shares" decimals="-3" scale="3" format="ixt:num-dot-decimal" id="f-wsh-23">15,812,547</ix:nonfraction></td></tr>
+</table>
+<div class="hdr" style="font-size:10pt">Note 7 &#8211; Debt</div>
+<p>The Company has outstanding fixed-rate notes with varying maturities (collectively the &#8220;Notes&#8221;). The following table shows the carrying values and stated interest rates of selected Notes as of September 27, 2025 (in millions):</p>
+<table style="width:100%">
+<tr><td></td><td class="r"><b>Maturities</b></td><td class="r"><b>Amount</b></td><td class="r"><b>Stated rate</b></td></tr>
+<tr><td>2013 &#8211; 2024 debt issuances</td><td class="r">2025 &#8211; 2062</td><td class="r">$ <ix:nonfraction name="us-gaap:DebtInstrumentFaceAmount" contextref="c-6" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-face-1">96,700</ix:nonfraction></td><td class="r"><ix:nonfraction name="us-gaap:DebtInstrumentInterestRateStatedPercentage" contextref="c-6" unitref="number" decimals="5" scale="-2" format="ixt:num-dot-decimal" id="f-rate-min">0.000</ix:nonfraction>% &#8211; <ix:nonfraction name="us-gaap:DebtInstrumentInterestRateStatedPercentage" contextref="c-6" unitref="number" decimals="5" scale="-2" format="ixt:num-dot-decimal" id="f-rate-max">4.850</ix:nonfraction>%</td></tr>
+<tr><td>2025 debt issuance</td><td class="r">2028 &#8211; 2035</td><td class="r"><ix:nonfraction name="us-gaap:DebtInstrumentFaceAmount" contextref="c-6" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-face-2">4,500</ix:nonfraction></td><td class="r"><ix:nonfraction name="us-gaap:DebtInstrumentInterestRateStatedPercentage" contextref="c-6" unitref="number" decimals="5" scale="-2" format="ixt:num-dot-decimal" id="f-rate-25a">4.000</ix:nonfraction>% &#8211; <ix:nonfraction name="us-gaap:DebtInstrumentInterestRateStatedPercentage" contextref="c-6" unitref="number" decimals="5" scale="-2" format="ixt:num-dot-decimal" id="f-rate-25b">4.750</ix:nonfraction>%</td></tr>
+<tr class="rule"><td><b>Total term debt principal</b></td><td></td><td class="r"><b>$ <ix:nonfraction name="us-gaap:DebtInstrumentCarryingAmount" contextref="c-6" unitref="usd" decimals="-6" scale="6" format="ixt:num-dot-decimal" id="f-carry">101,200</ix:nonfraction></b></td><td></td></tr>
+</table>
+<p>Interest expense on term debt was $<ix:nonfraction name="us-gaap:InterestExpenseDebt" contextref="c-1" unitref="usd" decimals="-8" scale="9" format="ixt:num-dot-decimal" id="f-intexp">3.0</ix:nonfraction> billion in 2025. The Company&#8217;s commercial paper program carries a weighted-average interest rate of 4.4%.</p>
+<p>In the fourth quarter of 2025 the Company issued $4.5 billion of new Notes, including 4.750% Notes due 2035 and 4.000% Notes due 2028, under its existing indenture.</p>
+<hr/>
+<div class="c" style="font-size:8pt">Apple Inc. | 2025 Form 10-K (sample) | 57</div>
+</body>
+</html>

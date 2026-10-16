@@ -41,7 +41,11 @@ def _setup_logging(level: str = "INFO") -> None:
 @click.group()
 def cli():
     """CloudSearch ingestion pipeline."""
-    pass
+
+
+from ingestion.edgar.cli import edgar  # registered after the group exists
+
+cli.add_command(edgar)
 
 
 @cli.command()
@@ -120,7 +124,9 @@ def crawl_only(services: tuple[str, ...], log_level: str):
 
     service_list = list(services) if services else None
     if service_list:
-        seed_urls = [SERVICE_SEED_URLS[s.lower()] for s in service_list if s.lower() in SERVICE_SEED_URLS]
+        seed_urls = [
+            SERVICE_SEED_URLS[s.lower()] for s in service_list if s.lower() in SERVICE_SEED_URLS
+        ]
     else:
         seed_urls = list(SERVICE_SEED_URLS.values())
 
@@ -142,7 +148,9 @@ def init_db():
     import subprocess
 
     click.echo("Running alembic upgrade head...")
-    result = subprocess.run(["alembic", "upgrade", "head"], capture_output=True, text=True)
+    result = subprocess.run(
+        ["alembic", "upgrade", "head"], capture_output=True, text=True, check=False
+    )
     if result.returncode == 0:
         click.echo("Database initialized successfully.")
     else:

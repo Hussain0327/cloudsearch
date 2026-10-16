@@ -37,6 +37,12 @@
   --error-tint: rgba(242, 84, 91, 0.12);
   --info: #5b9bd5;
 
+  /* --- Fact categories (EDGAR spider) ------------------------------- */
+  --cat-revenue: var(--success);
+  --cat-debt: var(--accent);
+  --cat-shares: #e879a6;
+  --cat-other: var(--text-muted);
+
   /* --- Score heat scale (low -> high relevance) ----------------------- */
   --heat-0: #5c6678;
   --heat-1: #5b9bd5;
@@ -83,6 +89,8 @@
   --grid-dot: rgba(20, 24, 31, 0.04);
   --focus-ring: rgba(27, 168, 162, 0.6);
 
+  --cat-shares: #c9437f;
+
   color-scheme: light;
 }
 
@@ -121,6 +129,11 @@
   --color-heat-2: var(--heat-2);
   --color-heat-3: var(--heat-3);
   --color-heat-4: var(--heat-4);
+
+  --color-cat-revenue: var(--cat-revenue);
+  --color-cat-debt: var(--cat-debt);
+  --color-cat-shares: var(--cat-shares);
+  --color-cat-other: var(--cat-other);
 
   /* Fonts (CSS variables provided by next/font in app/layout.tsx). */
   --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
@@ -331,4 +344,89 @@ pre {
 }
 *::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* ==========================================================================
+   EDGAR spider — the paper and the fact highlights
+   ========================================================================== */
+
+/* The filing is always rendered on white paper, so its category colors are
+   fixed to values that read on white regardless of the app theme. */
+.cs-doc {
+  --cat-revenue: #1f9d4a;
+  --cat-debt: #d97d0d;
+  --cat-shares: #c9437f;
+  --cat-other: #5c6678;
+  color: #111;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.cs-doc * {
+  scrollbar-width: thin;
+}
+.cs-doc img {
+  max-width: 100%;
+  height: auto;
+}
+.cs-doc table {
+  max-width: 100%;
+}
+.cs-doc a {
+  color: #1a4fb3;
+}
+.cs-doc hr {
+  border-color: #999;
+}
+
+.cs-fact {
+  border-radius: 2px;
+  padding: 0 1px;
+  transition:
+    background-color 220ms ease,
+    box-shadow 220ms ease;
+  --cat: var(--cat-other);
+}
+.cs-fact[data-category="revenue"] {
+  --cat: var(--cat-revenue);
+}
+.cs-fact[data-category="debt"] {
+  --cat: var(--cat-debt);
+}
+.cs-fact[data-category="shares"] {
+  --cat: var(--cat-shares);
+}
+.cs-fact[data-category="other"] {
+  --cat: var(--cat-other);
+}
+
+.cs-fact--hit {
+  background-color: color-mix(in srgb, var(--cat) 20%, transparent);
+  box-shadow: 0 0 0 1.5px var(--cat);
+}
+.cs-fact--current {
+  background-color: color-mix(in srgb, var(--cat) 32%, transparent);
+  box-shadow:
+    0 0 0 2px var(--cat),
+    0 0 0 6px color-mix(in srgb, var(--cat) 25%, transparent);
+}
+
+@keyframes cs-pulse {
+  0% {
+    box-shadow:
+      0 0 0 2px var(--cat),
+      0 0 0 2px color-mix(in srgb, var(--cat) 60%, transparent);
+  }
+  60% {
+    box-shadow:
+      0 0 0 2px var(--cat),
+      0 0 0 14px color-mix(in srgb, var(--cat) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 1.5px var(--cat);
+  }
+}
+.cs-fact--pulse {
+  animation: cs-pulse 700ms ease-out;
 }
