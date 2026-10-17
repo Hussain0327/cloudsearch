@@ -1,0 +1,23 @@
+{
+  "name": "spider-overlay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The CloudSearch spider overlay injected into web pages by Spider Desktop.",
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "test": "node --import tsx --test \"src/**/*_test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "devDependencies": {
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^26.6.5",
+    "esbuild": "^0.28.2",
+    "jsdom": "^30.1.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

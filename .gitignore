@@ -69,3 +69,9 @@ pnpm-debug.log*
 
 # ===== ML / model caches (kept out of the repo; HF cache lives in ~/.cache) =====
 .cache/
+
+# ===== Desktop (Spider Desktop: overlay bundle, generated Swift, SwiftPM, app bundle) =====
+desktop/overlay/dist/
+desktop/SpiderDesktop/Sources/SpiderDesktop/Generated/
+.build/
+desktop/build/

@@ -60,6 +60,24 @@ Try the extractor on any local filing without a database:
 make edgar-extract FILE=path/to/aapl-20250927.htm ARGS="--ticker AAPL"
 ```
 
+## Spider Desktop (Mac app)
+
+The same spider as a native Mac window that works on **any web page**, not
+only ingested 10-Ks: type a URL, press Run, and the spider walks the rendered
+page while the Found panel fills up. You pick when it runs, how fast (the pace
+slider), and what it collects (money, notes due, percentages, share counts,
+dates, big numbers, emails, or your own words / regex). Float on top keeps it
+above other apps; Export saves JSON or CSV. Nothing leaves the machine and no
+browser extension is involved.
+
+```sh
+make desktop-run        # builds the overlay + app, then launches it
+make desktop-app        # desktop/build/Spider.app
+make desktop-test       # overlay unit tests + end-to-end self-test on the demo 10-K
+```
+
+Contract and design: `docs/DESKTOP_SPIDER.md`. Code: `desktop/`.
+
 ### Spider API
 
 ```

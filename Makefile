@@ -4,6 +4,7 @@ BIN := $(VENV)/bin
 .PHONY: setup db-up db-down migrate ingest test lint
 .PHONY: api-dev api-build api-test docker-up docker-down
 .PHONY: edgar-ingest edgar-seed edgar-extract web-dev
+.PHONY: desktop-overlay desktop-build desktop-run desktop-app desktop-test
 
 # === Python ingestion pipeline ===
 
@@ -62,3 +63,22 @@ edgar-extract:  ## Run the extractor on a local filing: make edgar-extract FILE=
 
 web-dev:
 	cd web && pnpm dev
+
+# === Spider Desktop (native Mac app; see docs/DESKTOP_SPIDER.md) ===
+
+desktop-overlay: ## Build the injected overlay and embed it in the Swift app
+	cd desktop/overlay && pnpm install --frozen-lockfile && pnpm build
+
+desktop-build: desktop-overlay ## Build the Mac app (release)
+	cd desktop/SpiderDesktop && swift build -c release --product SpiderDesktop
+
+desktop-run: desktop-build ## Build and launch the Mac app. ARGS="https://example.com"
+	./desktop/SpiderDesktop/.build/release/SpiderDesktop $(ARGS)
+
+desktop-app: desktop-build ## Wrap the binary in desktop/build/Spider.app
+	desktop/scripts/bundle-app.sh
+
+desktop-test: desktop-overlay ## Overlay unit tests + end-to-end self-test on the demo 10-K
+	cd desktop/overlay && pnpm typecheck && pnpm test
+	cd desktop/SpiderDesktop && swift build --product SpiderDesktop
+	./desktop/SpiderDesktop/.build/debug/SpiderDesktop --self-test src/ingestion/edgar/demo/aapl_10k_sample.htm
