@@ -22,6 +22,7 @@ dependencies = [
     "tiktoken>=0.5,<1",
     "structlog>=24.1,<26",
     "alembic>=1.13,<2",
+    "sqlalchemy>=2.0,<2.1",
     "psycopg2-binary>=2.9,<3",
 ]
 
@@ -39,9 +40,16 @@ cloudsearch-ingest = "ingestion.cli:cli"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"ingestion.edgar" = ["demo/*.htm"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "db: needs a running Postgres with migrations applied",
+    "slow: downloads the embedding model",
+]
 
 [tool.ruff]
 target-version = "py311"

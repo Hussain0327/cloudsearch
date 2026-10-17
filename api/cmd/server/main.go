@@ -15,6 +15,7 @@ import (
 	"github.com/hussain/cloudsearch/api/internal/config"
 	"github.com/hussain/cloudsearch/api/internal/db"
 	"github.com/hussain/cloudsearch/api/internal/embedding"
+	"github.com/hussain/cloudsearch/api/internal/filings"
 	"github.com/hussain/cloudsearch/api/internal/handler"
 	"github.com/hussain/cloudsearch/api/internal/llm"
 	"github.com/hussain/cloudsearch/api/internal/ratelimit"
@@ -70,9 +71,10 @@ func main() {
 	healthHandler := handler.NewHealthHandler(pool, embedClient)
 	searchHandler := handler.NewSearchHandler(hybridSearcher, llmProvider, appCache)
 	statsHandler := handler.NewStatsHandler(pool)
+	filingsHandler := handler.NewFilingsHandler(filings.NewPGStore(pool))
 
 	// Server
-	srv := server.New(cfg.ServerPort, cfg.CORSAllowedOrigins, healthHandler, searchHandler, statsHandler, rl)
+	srv := server.New(cfg.ServerPort, cfg.CORSAllowedOrigins, healthHandler, searchHandler, statsHandler, filingsHandler, rl)
 
 	// Graceful shutdown
 	sigCh := make(chan os.Signal, 1)

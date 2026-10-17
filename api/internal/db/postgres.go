@@ -34,13 +34,16 @@ func NewPool(ctx context.Context, dsn string, minConns, maxConns int) (*pgxpool.
 	if err != nil {
 		return nil, fmt.Errorf("checking pgvector extension: %w", err)
 	}
-	if !extExists {
-		return nil, fmt.Errorf("pgvector extension not found")
-	}
-
-	// Extension confirmed — now register the vector type on every new connection.
-	cfg.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		return pgxvector.RegisterTypes(ctx, conn)
+	if extExists {
+		// Extension confirmed — register the vector type on every new connection.
+		cfg.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+			return pgxvector.RegisterTypes(ctx, conn)
+		}
+	} else {
+		// pgvector is optional: the filings/facts feature runs on a plain
+		// Postgres. Vector search will fail at query time and HybridSearcher
+		// degrades to keyword-only.
+		log.Warn().Msg("pgvector extension not found; vector search disabled, hybrid search will degrade to keyword-only")
 	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)

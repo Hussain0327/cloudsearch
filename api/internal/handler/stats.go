@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 
@@ -60,13 +63,38 @@ func (h *StatsHandler) Stats(w http.ResponseWriter, r *http.Request) {
 		services = append(services, s)
 	}
 
+	totalFilings := h.countOptional(ctx, "filings")
+	totalFacts := h.countOptional(ctx, "facts")
+
 	resp := models.StatsResponse{
 		TotalDocuments: totalDocs,
 		TotalChunks:    totalChunks,
+		TotalFilings:   totalFilings,
+		TotalFacts:     totalFacts,
 		Services:       services,
 		IndexedAt:      time.Now(),
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(resp)
+}
+
+// countOptional counts rows in a table that may not exist yet (the filings
+// migration is newer than the documents schema). A missing table (SQLSTATE
+// 42P01 undefined_table) logs a warning and counts as 0 instead of failing the
+// whole stats response.
+func (h *StatsHandler) countOptional(ctx context.Context, table string) int64 {
+	var n int64
+	// table is one of two compile-time constants, never user input.
+	err := h.pool.QueryRow(ctx, "SELECT COUNT(*) FROM "+table).Scan(&n)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+			log.Warn().Str("table", table).Msg("table not found; run alembic upgrade head")
+			return 0
+		}
+		log.Error().Err(err).Str("table", table).Msg("counting rows")
+		return 0
+	}
+	return n
 }

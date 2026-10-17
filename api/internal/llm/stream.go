@@ -54,6 +54,19 @@ func (s *SSEWriter) WriteMetadata(data any) error {
 	return s.writeEvent("metadata", string(jsonData))
 }
 
+// WriteEvent sends an arbitrary named event with a JSON-encoded payload.
+// A nil payload emits the event with no data line.
+func (s *SSEWriter) WriteEvent(event string, data any) error {
+	if data == nil {
+		return s.writeEvent(event, "")
+	}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("marshaling %s event: %w", event, err)
+	}
+	return s.writeEvent(event, string(jsonData))
+}
+
 // WriteDone sends the stream termination event.
 func (s *SSEWriter) WriteDone() error {
 	return s.writeEvent("done", "")
