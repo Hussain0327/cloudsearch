@@ -1,0 +1,105 @@
+{
+  "config": {
+    "detectors": {
+      "notes": true,
+      "money": true,
+      "shares": true,
+      "percent": true,
+      "date": true,
+      "number": false,
+      "email": false,
+      "custom": true
+    },
+    "custom": ""
+  },
+  "facts": [
+    {
+      "index": 0,
+      "id": "f-00000",
+      "category": "revenue",
+      "kind": "money",
+      "text": "$383.3 billion",
+      "label": "Total net sales",
+      "value": 383300000000,
+      "unit": "USD",
+      "context": "Total net sales were $383.3 billion in fiscal 2023, up 2.8% from the prior year."
+    },
+    {
+      "index": 1,
+      "id": "f-00001",
+      "category": "revenue",
+      "kind": "percent",
+      "text": "2.8%",
+      "label": "net sales were billion in fiscal",
+      "value": 2.8,
+      "unit": "percent",
+      "context": "Total net sales were $383.3 billion in fiscal 2023, up 2.8% from the prior year."
+    },
+    {
+      "index": 2,
+      "id": "f-00002",
+      "category": "debt",
+      "kind": "money",
+      "text": "$106.6 million",
+      "label": "Term debt",
+      "value": 106600000,
+      "unit": "USD",
+      "context": "Term debt of $106.6 million is due in 2030."
+    },
+    {
+      "index": 3,
+      "id": "f-00003",
+      "category": "revenue",
+      "kind": "money",
+      "text": "$117.2 billion",
+      "label": "Revenue Q",
+      "value": 117200000000,
+      "unit": "USD",
+      "context": "Revenue Q1 $117.2 billion $119.6 billion"
+    },
+    {
+      "index": 4,
+      "id": "f-00004",
+      "category": "revenue",
+      "kind": "money",
+      "text": "$119.6 billion",
+      "label": "Revenue Q billion",
+      "value": 119600000000,
+      "unit": "USD",
+      "context": "Revenue Q1 $117.2 billion $119.6 billion"
+    },
+    {
+      "index": 5,
+      "id": "f-00005",
+      "category": "shares",
+      "kind": "shares",
+      "text": "15,552,752,000 shares",
+      "label": "There were shares of common stock",
+      "value": 15552752000,
+      "unit": "shares",
+      "context": "There were 15,552,752,000 shares of common stock outstanding as of October 20, 2023."
+    },
+    {
+      "index": 6,
+      "id": "f-00006",
+      "category": "other",
+      "kind": "date",
+      "text": "October 20, 2023",
+      "label": "were shares of common stock outstanding",
+      "value": null,
+      "unit": null,
+      "context": "There were 15,552,752,000 shares of common stock outstanding as of October 20, 2023."
+    },
+    {
+      "index": 7,
+      "id": "f-00007",
+      "category": "debt",
+      "kind": "percent",
+      "text": "4.65% Notes due 2046",
+      "label": "Notes due 2046",
+      "value": 4.65,
+      "unit": "percent",
+      "context": "4.65% Notes due 2046 were issued in the offering."
+    }
+  ]
+}
