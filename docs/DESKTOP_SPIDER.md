@@ -31,7 +31,7 @@ There is no browser extension and no server in the loop.
 ## Non-goals (v1)
 
 - Saving crawls to Postgres or the Go API.
-- Hopping between pages (the `filing_links` idea) and global hotkeys.
+- Hopping between pages (the `filing_links` idea).
 - Inline XBRL tag reading in the overlay.
   The overlay is regex-only; the Python extractor stays the exact source for
   10-K facts.

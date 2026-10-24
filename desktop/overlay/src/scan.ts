@@ -5,14 +5,13 @@
  */
 
 import {
-  categoryFor,
   compileDetectors,
   findMatches,
   type CompiledDetector,
   type DetectorConfig,
-  type Match,
 } from './detectors';
-import {clipContext, labelForMatch} from './label';
+import {buildFact} from './fact';
+import {clipContext} from './label';
 import type {Fact} from './types';
 
 export const FACT_CLASS = 'cs-fact';
@@ -50,14 +49,6 @@ export interface ScanResult {
   readonly facts: Fact[];
   readonly truncated: boolean;
   readonly error?: string;
-}
-
-export function factId(index: number): string {
-  return `f-${String(index).padStart(5, '0')}`;
-}
-
-function collapseWhitespace(text: string): string {
-  return text.replace(/\s+/g, ' ').trim();
 }
 
 function isVisible(element: Element): boolean {
@@ -138,21 +129,6 @@ function wrap(doc: Document, node: Text, start: number, end: number, fact: Fact)
   target.parentNode?.insertBefore(span, target);
   span.appendChild(target);
   return rest;
-}
-
-function buildFact(index: number, match: Match, context: string): Fact {
-  const text = collapseWhitespace(match.text);
-  return {
-    index,
-    id: factId(index),
-    category: categoryFor(match, context),
-    kind: match.kind,
-    text,
-    label: match.label ?? labelForMatch(context, text),
-    value: match.value,
-    unit: match.unit,
-    context,
-  };
 }
 
 function scanNode(

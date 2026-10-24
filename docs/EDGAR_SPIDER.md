@@ -243,6 +243,29 @@ python -m ingestion edgar extract-file path/to/10k.htm      # offline, prints fa
 python -m ingestion edgar seed-demo                         # offline fixture -> Postgres
 ```
 
+## MCP server
+
+Read-only tools (`list_filings`, `get_facts`, `get_provenance`) over the indexed
+filings, via stdio. Install the extra, point it at Postgres, register it:
+
+```
+pip install -e ".[mcp]"
+claude mcp add edgar-spider -e DATABASE_URL=postgresql://cloudsearch:cloudsearch@localhost:5432/cloudsearch \
+  -- /path/to/cloudsearch/.venv/bin/python -m ingestion.edgar.mcp_server
+```
+
+Postgres without Docker (Apple `container`; migrations need the pgvector image):
+
+```
+container run -d --name cloudsearch-pg -p 5432:5432 \
+  -e POSTGRES_DB=cloudsearch -e POSTGRES_USER=cloudsearch -e POSTGRES_PASSWORD=cloudsearch \
+  pgvector/pgvector:pg16
+alembic upgrade head && python -m ingestion edgar seed-demo
+```
+
+A fact's period is only in its `context` text for now; there is no
+`compare_concept` tool until structured periods land.
+
 `SEC_USER_AGENT` must be set for live fetches, in the form
 `"Name email@example.com"`, per the SEC fair-access policy. Requests are
 limited to 8 per second.

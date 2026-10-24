@@ -82,3 +82,4 @@ desktop-test: desktop-overlay ## Overlay unit tests + end-to-end self-test on th
 	cd desktop/overlay && pnpm typecheck && pnpm test
 	cd desktop/SpiderDesktop && swift build --product SpiderDesktop
 	./desktop/SpiderDesktop/.build/debug/SpiderDesktop --self-test src/ingestion/edgar/demo/aapl_10k_sample.htm
+	./desktop/SpiderDesktop/.build/debug/SpiderDesktop --self-test-text desktop/fixtures/capture_sample.txt

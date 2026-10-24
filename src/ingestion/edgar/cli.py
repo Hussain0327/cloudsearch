@@ -153,6 +153,102 @@ def extract_file(path: str, ticker: str | None, as_json: bool, out: str | None):
             )
 
 
+@edgar.command("eval")
+@click.option("--tickers", "-t", multiple=True, help="Live mode. Default: AAPL.")
+@click.option("--form", default="10-K", show_default=True)
+@click.option("--file", "file_", type=click.Path(exists=True, dir_okay=False), default=None)
+@click.option("--accession", default=None, help="Offline mode: accession of --file.")
+@click.option("--cik", default=None, help="Offline mode: label only.")
+@click.option(
+    "--companyfacts",
+    type=click.Path(exists=True, dir_okay=False),
+    default=None,
+    help="Offline mode: a saved companyfacts JSON.",
+)
+@click.option("--user-agent", default=None, help="Overrides SEC_USER_AGENT.")
+@click.option("--max-facts", default=5000, show_default=True)
+@click.option("--fail-under-recall", type=float, default=None, help="Exit 1 below this recall.")
+def eval_(
+    tickers: tuple[str, ...],
+    form: str,
+    file_: str | None,
+    accession: str | None,
+    cik: str | None,
+    companyfacts: str | None,
+    user_agent: str | None,
+    max_facts: int,
+    fail_under_recall: float | None,
+):
+    """Score the extractor's iXBRL pass against SEC companyfacts (parse fidelity)."""
+    from ingestion.edgar.evaluation.groundtruth import load_truth
+    from ingestion.edgar.evaluation.runner import evaluate, format_report, run_live
+
+    if file_:
+        if not (accession and companyfacts):
+            raise click.UsageError("--file needs --accession and --companyfacts.")
+        html = Path(file_).read_text(encoding="utf-8", errors="replace")
+        truth = load_truth(companyfacts, accession)
+        reports = [(f"{cik or '?'} {accession}", evaluate(html, truth, max_facts=max_facts))]
+    else:
+        reports = asyncio.run(
+            run_live([t.upper() for t in tickers] or ["AAPL"], form, user_agent, max_facts)
+        )
+
+    failed = False
+    for label, report in reports:
+        click.echo(format_report(label, report))
+        recall = report.summary()["recall"]
+        failed |= fail_under_recall is not None and (recall is None or recall < fail_under_recall)
+    if failed:
+        raise SystemExit(1)
+
+
+@edgar.command("export")
+@click.option(
+    "--from-file",
+    "from_file",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False),
+    help="Local filing HTML (offline; no SEC fetch).",
+)
+@click.option("--ticker", required=True, help="Filer ticker.")
+@click.option("--accession", required=True, help="Accession number of the filing.")
+@click.option("--cik", default=None, help="Filer CIK. Default: looked up from the universe.")
+@click.option(
+    "--max-facts",
+    default=5000,
+    type=click.IntRange(min=1),
+    show_default=True,
+    help="Extractor fact cap.",
+)
+@click.option("--out", "out_dir", required=True, type=click.Path(file_okay=False))
+def export(
+    from_file: str, ticker: str, accession: str, cik: str | None, max_facts: int, out_dir: str
+):
+    """Export a local filing's facts to Parquet plus manifest.json (experimental)."""
+    from ingestion.edgar.export import export_filing  # lazy: pulls in pyarrow
+    from ingestion.edgar.extract import FilingExtractor
+
+    ticker = ticker.upper()
+    if cik is None:
+        known = company_for(ticker)
+        cik = known.cik if known else None
+    html = Path(from_file).read_text(encoding="utf-8", errors="replace")
+    result = FilingExtractor(max_facts=max_facts).extract(html, ticker=ticker)
+    manifest = export_filing(
+        result,
+        ticker=ticker,
+        accession=accession,
+        cik=cik,
+        out_dir=Path(out_dir),
+        max_facts=max_facts,
+    )
+    click.echo(
+        f"exported {manifest['rows']['facts']} facts to {out_dir}"
+        + (" (truncated)" if manifest["truncated"] else "")
+    )
+
+
 @edgar.command("seed-demo")
 def seed_demo():
     """Load the bundled synthetic 10-K samples into Postgres (offline demo)."""

@@ -39,6 +39,11 @@ keeps the window above other apps; **Export…** saves JSON or CSV.
 - `SpiderDesktop --self-test <file-or-url>` loads a page, crawls it with every
   detector on, prints one JSON line and exits 0 when every fact was visited.
   `make desktop-test` runs it on `src/ingestion/edgar/demo/aapl_10k_sample.htm`.
+- `SpiderDesktop --self-test-text <capture.txt>` runs the DOM-free text bundle
+  in JavaScriptCore and compares with `<capture>.expected.json`; the node test
+  `text-extract_test.ts` checks the same golden file (`fixtures/`). Regenerate
+  it with `UPDATE_GOLDEN=1 pnpm test`. System-wide capture (Accessibility,
+  screen OCR, hotkey) is not built yet; only this text core is.
 - `swift test` needs XCTest, which ships with Xcode, not with the Command Line
   Tools; the test files under `SpiderDesktop/Tests/` are for machines that have
   it.

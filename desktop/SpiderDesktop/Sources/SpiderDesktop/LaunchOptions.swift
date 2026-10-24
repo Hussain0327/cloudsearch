@@ -9,6 +9,7 @@ struct SelfTestOptions {
 struct LaunchOptions {
   var initialURL: URL?
   var selfTest: SelfTestOptions?
+  var selfTestText: URL?
 
   static func parse(_ arguments: [String]) -> LaunchOptions {
     var options = LaunchOptions()
@@ -20,6 +21,11 @@ struct LaunchOptions {
       case "--self-test":
         if index + 1 < arguments.count {
           options.selfTest = SelfTestOptions(target: resolve(arguments[index + 1]), timeout: timeout)
+          index += 1
+        }
+      case "--self-test-text":
+        if index + 1 < arguments.count {
+          options.selfTestText = resolve(arguments[index + 1])
           index += 1
         }
       case "--timeout":

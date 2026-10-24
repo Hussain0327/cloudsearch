@@ -51,9 +51,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -e ".[dev]"
+          pip install -e ".[dev,mcp,dataset]"
       - name: Lint new modules
-        run: ruff check src/ingestion/edgar tests/test_edgar_extract.py tests/test_edgar_client.py tests/test_edgar_store.py tests/test_edgar_cli.py
+        run: ruff check src/ingestion/edgar tests/test_edgar_extract.py tests/test_edgar_client.py tests/test_edgar_store.py tests/test_edgar_cli.py tests/test_edgar_eval.py tests/test_edgar_mcp.py tests/test_edgar_export.py
       - name: Migrate
         run: alembic upgrade head
       - name: Tests (unit + Postgres-backed; model-download tests excluded)

@@ -61,6 +61,10 @@ def submissions_url(cik: str) -> str:
     return f"{DATA_BASE}/submissions/CIK{normalize_cik(cik)}.json"
 
 
+def companyfacts_url(cik: str) -> str:
+    return f"{DATA_BASE}/api/xbrl/companyfacts/CIK{normalize_cik(cik)}.json"
+
+
 def _parse_iso(value: str | None) -> date | None:
     if not value:
         return None
@@ -154,6 +158,9 @@ class EdgarClient:
         resp = await self._get(url)
         async with resp:
             return await resp.json(content_type=None)
+
+    async def companyfacts(self, cik: str) -> dict:
+        return await self.get_json(companyfacts_url(cik))
 
     async def get_text(self, url: str) -> str:
         resp = await self._get(url)
