@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="440" viewBox="0 0 1280 440" role="img" aria-labelledby="t d">
+  <title id="t">FactSpider</title>
+  <desc id="d">A spider hangs on a thread over a Form 10-K page and walks between highlighted facts: revenue, a note due 2042, a share count, and a link to another company.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="1" stop-color="#111a24"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="440" rx="20" fill="url(#bg)"/>
+
+  <!-- Faint web in the corner. -->
+  <g stroke="#e6edf3" stroke-opacity="0.07" fill="none" stroke-width="1.2">
+    <path d="M0 0 L300 0 M0 0 L280 110 M0 0 L200 220 M0 0 L100 290 M0 0 L0 300"/>
+    <path d="M60 0 Q56 22 50 30 Q34 42 20 50 Q8 56 0 60"/>
+    <path d="M140 0 Q130 50 112 70 Q78 100 45 115 Q20 128 0 140"/>
+    <path d="M230 0 Q214 82 186 115 Q130 166 72 190 Q34 206 0 220"/>
+  </g>
+
+  <!-- Title block. -->
+  <g font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="72" y="168" font-size="68" font-weight="700" fill="#e6edf3" letter-spacing="-1">FactSpider</text>
+    <text x="74" y="220" font-size="24" fill="#9aa4b2">Every number in a filing: found, sourced,</text>
+    <text x="74" y="252" font-size="24" fill="#9aa4b2">and checked against the SEC.</text>
+  </g>
+  <g font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="15">
+    <rect x="72" y="296" width="132" height="34" rx="17" fill="#46c46a1f" stroke="#46c46a"/>
+    <text x="138" y="318" text-anchor="middle" fill="#46c46a">iXBRL + regex</text>
+    <rect x="216" y="296" width="128" height="34" rx="17" fill="#f5a6231f" stroke="#f5a623"/>
+    <text x="280" y="318" text-anchor="middle" fill="#f5a623">eval vs SEC</text>
+    <rect x="356" y="296" width="70" height="34" rx="17" fill="#e879a61f" stroke="#e879a6"/>
+    <text x="391" y="318" text-anchor="middle" fill="#e879a6">MCP</text>
+    <rect x="438" y="296" width="104" height="34" rx="17" fill="#8b949e1f" stroke="#8b949e"/>
+    <text x="490" y="318" text-anchor="middle" fill="#c9d1d9">Mac app</text>
+  </g>
+
+  <!-- The filing. -->
+  <rect x="700" y="48" width="470" height="344" rx="12" fill="#161b22" stroke="#30363d"/>
+  <text x="728" y="84" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#8b949e">FORM 10-K · Item 7 · MD&amp;A</text>
+  <g fill="#30363d">
+    <rect x="728" y="110" width="150" height="9" rx="4"/>
+    <rect x="1060" y="110" width="80" height="9" rx="4"/>
+    <rect x="728" y="140" width="412" height="9" rx="4"/>
+    <rect x="728" y="164" width="380" height="9" rx="4"/>
+    <rect x="980" y="196" width="160" height="9" rx="4"/>
+    <rect x="728" y="226" width="412" height="9" rx="4"/>
+    <rect x="728" y="250" width="200" height="9" rx="4"/>
+    <rect x="728" y="280" width="190" height="9" rx="4"/>
+    <rect x="728" y="310" width="412" height="9" rx="4"/>
+    <rect x="910" y="346" width="230" height="9" rx="4"/>
+  </g>
+
+  <!-- The path the spider walked, fact to fact. -->
+  <path d="M955 115 C 920 160, 860 170, 850 200 C 840 240, 1000 250, 1010 284 C 1020 320, 860 320, 830 350"
+        fill="none" stroke="#e6edf3" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="4 6"/>
+
+  <g font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="14">
+    <rect x="890" y="102" width="150" height="26" rx="6" fill="#1e342d" stroke="#46c46a"/>
+    <text x="965" y="120" text-anchor="middle" fill="#46c46a">$391.0 billion</text>
+    <rect x="740" y="187" width="222" height="26" rx="6" fill="#373022" stroke="#f5a623"/>
+    <text x="851" y="205" text-anchor="middle" fill="#f5a623">3.600% Notes due 2042</text>
+    <rect x="940" y="271" width="140" height="26" rx="6" fill="#352936" stroke="#e879a6"/>
+    <text x="1010" y="289" text-anchor="middle" fill="#e879a6">15.1B shares</text>
+    <rect x="770" y="337" width="122" height="26" rx="6" fill="#232932" stroke="#8b949e"/>
+    <text x="831" y="355" text-anchor="middle" fill="#c9d1d9">Microsoft ↗</text>
+  </g>
+
+  <!-- The spider, on its thread. -->
+  <line x1="1112" y1="0" x2="1112" y2="168" stroke="#8b949e" stroke-width="1.5"/>
+  <g stroke="#e6edf3" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <polyline points="1100,190 1072,168 1058,188"/>
+    <polyline points="1098,198 1066,192 1052,212"/>
+    <polyline points="1098,206 1068,214 1056,238"/>
+    <polyline points="1100,214 1078,234 1072,258"/>
+    <polyline points="1124,190 1152,168 1166,188"/>
+    <polyline points="1126,198 1158,192 1172,212"/>
+    <polyline points="1126,206 1156,214 1168,238"/>
+    <polyline points="1124,214 1146,234 1152,258"/>
+  </g>
+  <circle cx="1112" cy="178" r="10" fill="#e6edf3"/>
+  <ellipse cx="1112" cy="206" rx="15" ry="20" fill="#e6edf3"/>
+  <circle cx="1108" cy="176" r="2.2" fill="#0d1117"/>
+  <circle cx="1116" cy="176" r="2.2" fill="#0d1117"/>
+
+  <!-- Found counter. -->
+  <text x="1150" y="380" text-anchor="end" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="13" fill="#8b949e">Found 4 · revenue 1 · debt 1 · shares 1 · link 1</text>
+</svg>
